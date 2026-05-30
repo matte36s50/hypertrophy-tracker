@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #0b0f14;
+  color: #e7edf3;
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent the iOS "rubber band" white flash and stop text auto-zoom. */
+  overscroll-behavior-y: none;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Respect the iPhone notch / home indicator. */
+body {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Bigger, comfortable tap targets everywhere by default. */
+button,
+a {
+  touch-action: manipulation;
+}
+
+/* Hide number-input spinners for a cleaner mobile look. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
