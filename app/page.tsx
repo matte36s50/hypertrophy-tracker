@@ -15,6 +15,7 @@ import {
   updateSet,
   weightStep,
 } from "@/lib/logs";
+import { analyzeExercise } from "@/lib/progression";
 import type { MuscleGroup, SetLog } from "@/lib/types";
 
 // Describes which set the logging sheet is currently editing/adding.
@@ -152,14 +153,23 @@ export default function TodayPage() {
           const logs = todaysLogsForExercise(data, item.exerciseId);
           // Show at least the planned number of slots; allow extras beyond.
           const slots = Math.max(item.sets, logs.length);
+          const advice = analyzeExercise(data, item.exerciseId);
 
           return (
             <Card key={item.exerciseId}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="truncate text-base font-semibold">
-                    {ex.name}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="truncate text-base font-semibold">
+                      {ex.name}
+                    </h2>
+                    {advice.status === "add-weight" &&
+                      advice.suggestedWeight != null && (
+                        <span className="shrink-0 rounded-md bg-success/20 px-1.5 py-0.5 text-xs font-bold text-success">
+                          ↑ {formatWeight(advice.suggestedWeight)} {data.unit}
+                        </span>
+                      )}
+                  </div>
                   <p className="mt-0.5 text-sm text-muted">
                     {MUSCLE_LABELS[ex.primaryMuscle]} · {ex.repRange.min}–
                     {ex.repRange.max} reps · {ex.targetRIR} RIR

@@ -17,8 +17,10 @@ Nippard-style exercise tiers.
   Push-Pull-Legs split with a starter exercise list, PWA (manifest + icons +
   service worker), clean Today screen, exercise library, and a progression
   preview. Set logging is stubbed.
-- **Phase 2:** Set logging (weight / reps / RIR) saved to localStorage.
-- **Phase 3:** Double-progression "add weight" nudges + RP weekly volume.
+- **Phase 2 (done):** Set logging (weight / reps / RIR) saved to localStorage,
+  with edit/delete and a bottom-sheet logger.
+- **Phase 3 (done):** Double-progression "add weight" nudges, RP weekly volume
+  coaching, and per-exercise weight/volume history charts.
 - **Phase 4:** Tier-list library with swap suggestions.
 - **Phase 5 (optional):** cloud sync + login.
 
