@@ -1,12 +1,17 @@
 "use client";
 
 import { useMemo } from "react";
+import { useAppData } from "@/components/DataProvider";
 import { EXERCISES } from "@/lib/exercises";
+import { exercisesInPlan } from "@/lib/plan";
 import { MUSCLE_LABELS, MUSCLE_ORDER } from "@/lib/muscles";
 import { Card, PageHeader, Pill, TierBadge } from "@/components/ui";
 import type { Exercise, MuscleGroup } from "@/lib/types";
 
 export default function LibraryPage() {
+  const { data } = useAppData();
+  const inPlan = useMemo(() => exercisesInPlan(data), [data]);
+
   // Group exercises by primary muscle, then sort each group by tier (S→A→B).
   const byMuscle = useMemo(() => {
     const tierRank = { S: 0, A: 1, B: 2 };
@@ -24,7 +29,7 @@ export default function LibraryPage() {
     <div>
       <PageHeader
         title="Exercise Library"
-        subtitle="Movements ranked S / A / B for hypertrophy. Swapping comes in Phase 4."
+        subtitle="Movements ranked S / A / B. To swap one into your plan, tap “Swap / edit” on the Today tab."
       />
 
       <div className="space-y-6">
@@ -42,7 +47,14 @@ export default function LibraryPage() {
                     <div className="flex items-start gap-3">
                       <TierBadge tier={ex.tier} />
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-base font-semibold">{ex.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-base font-semibold">{ex.name}</h3>
+                          {inPlan.has(ex.id) && (
+                            <span className="shrink-0 rounded-md bg-success/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-success">
+                              In plan
+                            </span>
+                          )}
+                        </div>
                         {ex.note && (
                           <p className="mt-0.5 text-sm text-muted">{ex.note}</p>
                         )}

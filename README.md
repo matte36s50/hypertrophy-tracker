@@ -21,7 +21,9 @@ Nippard-style exercise tiers.
   with edit/delete and a bottom-sheet logger.
 - **Phase 3 (done):** Double-progression "add weight" nudges, RP weekly volume
   coaching, and per-exercise weight/volume history charts.
-- **Phase 4:** Tier-list library with swap suggestions.
+- **Phase 4 (done):** Tier-ranked swap suggestions — swap any exercise in your
+  plan for a same-muscle alternative (S→A→B) and adjust set counts, with an
+  "In plan" marker in the library.
 - **Phase 5 (optional):** cloud sync + login.
 
 ## Run locally

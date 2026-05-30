@@ -334,3 +334,13 @@ export const EXERCISE_MAP: Record<string, Exercise> = Object.fromEntries(
 export function getExercise(id: string): Exercise | undefined {
   return EXERCISE_MAP[id];
 }
+
+const TIER_RANK = { S: 0, A: 1, B: 2 } as const;
+
+// All exercises that primarily train a muscle, ranked best-first (S→A→B, then
+// alphabetical). Used to suggest swaps.
+export function alternativesForMuscle(muscle: Exercise["primaryMuscle"]): Exercise[] {
+  return EXERCISES.filter((e) => e.primaryMuscle === muscle).sort(
+    (a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || a.name.localeCompare(b.name),
+  );
+}

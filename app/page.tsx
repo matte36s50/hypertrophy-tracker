@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import { useAppData } from "@/components/DataProvider";
 import { Card, PageHeader, Pill } from "@/components/ui";
 import { SetLogSheet, type SetLogValues } from "@/components/SetLogSheet";
+import { SwapSheet } from "@/components/SwapSheet";
 import { getExercise } from "@/lib/exercises";
+import { setExerciseSets, swapExerciseInSplit } from "@/lib/plan";
 import { dayForWeekday } from "@/lib/split";
 import { MUSCLE_LABELS } from "@/lib/muscles";
 import {
@@ -29,6 +31,8 @@ interface SheetTarget {
 export default function TodayPage() {
   const { data, update, ready } = useAppData();
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
+  // Exercise id currently open in the swap/edit sheet.
+  const [swapId, setSwapId] = useState<string | null>(null);
 
   const now = new Date();
   const weekday = now.getDay();
@@ -114,7 +118,21 @@ export default function TodayPage() {
     setSheet(null);
   }
 
+  function handleSwap(toExerciseId: string) {
+    if (!swapId) return;
+    update((d) => swapExerciseInSplit(d, day.key, swapId, toExerciseId));
+    setSwapId(null);
+  }
+
+  function handleSetsChange(sets: number) {
+    if (!swapId) return;
+    update((d) => setExerciseSets(d, day.key, swapId, sets));
+  }
+
   const sheetExercise = sheet ? getExercise(sheet.exerciseId) : null;
+  const swapExercise = swapId ? getExercise(swapId) : null;
+  const swapSets =
+    day.exercises.find((e) => e.exerciseId === swapId)?.sets ?? 3;
 
   return (
     <div>
@@ -175,9 +193,18 @@ export default function TodayPage() {
                     {ex.repRange.max} reps · {ex.targetRIR} RIR
                   </p>
                 </div>
-                <span className="shrink-0 rounded-lg bg-surface-2 px-2.5 py-1 text-sm font-medium text-muted">
-                  {logs.length}/{item.sets}
-                </span>
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                  <span className="rounded-lg bg-surface-2 px-2.5 py-1 text-sm font-medium text-muted">
+                    {logs.length}/{item.sets}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSwapId(item.exerciseId)}
+                    className="text-xs font-medium text-accent active:opacity-70"
+                  >
+                    Swap / edit
+                  </button>
+                </div>
               </div>
 
               <div className="mt-3 space-y-2">
@@ -251,6 +278,16 @@ export default function TodayPage() {
           onSave={handleSave}
           onDelete={handleDelete}
           onClose={() => setSheet(null)}
+        />
+      )}
+
+      {swapExercise && (
+        <SwapSheet
+          current={swapExercise}
+          sets={swapSets}
+          onSwap={handleSwap}
+          onSetsChange={handleSetsChange}
+          onClose={() => setSwapId(null)}
         />
       )}
     </div>
