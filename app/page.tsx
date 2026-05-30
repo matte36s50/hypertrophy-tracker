@@ -1,15 +1,33 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useAppData } from "@/components/DataProvider";
 import { Card, PageHeader, Pill } from "@/components/ui";
+import { SetLogSheet, type SetLogValues } from "@/components/SetLogSheet";
 import { getExercise } from "@/lib/exercises";
 import { dayForWeekday } from "@/lib/split";
 import { MUSCLE_LABELS } from "@/lib/muscles";
-import type { MuscleGroup } from "@/lib/types";
+import {
+  addSet,
+  deleteSet,
+  lastLogForExercise,
+  todaysLogsForExercise,
+  updateSet,
+  weightStep,
+} from "@/lib/logs";
+import type { MuscleGroup, SetLog } from "@/lib/types";
+
+// Describes which set the logging sheet is currently editing/adding.
+interface SheetTarget {
+  exerciseId: string;
+  setNumber: number;
+  editingId?: string;
+  initial: SetLogValues;
+}
 
 export default function TodayPage() {
-  const { data, ready } = useAppData();
+  const { data, update, ready } = useAppData();
+  const [sheet, setSheet] = useState<SheetTarget | null>(null);
 
   const now = new Date();
   const weekday = now.getDay();
@@ -18,8 +36,8 @@ export default function TodayPage() {
     [weekday, data.split],
   );
 
-  // Target sets per muscle for today's session (from the planned set counts).
-  const plannedSets = useMemo(() => {
+  // Planned sets per muscle for this session.
+  const plannedByMuscle = useMemo(() => {
     const counts: Partial<Record<MuscleGroup, number>> = {};
     for (const item of day.exercises) {
       const ex = getExercise(item.exerciseId);
@@ -29,13 +47,73 @@ export default function TodayPage() {
     return counts;
   }, [day]);
 
-  const totalSets = day.exercises.reduce((sum, e) => sum + e.sets, 0);
+  // Sets actually logged today per muscle (live running count).
+  const loggedByMuscle = useMemo(() => {
+    const counts: Partial<Record<MuscleGroup, number>> = {};
+    for (const item of day.exercises) {
+      const ex = getExercise(item.exerciseId);
+      if (!ex) continue;
+      const n = todaysLogsForExercise(data, item.exerciseId).length;
+      counts[ex.primaryMuscle] = (counts[ex.primaryMuscle] ?? 0) + n;
+    }
+    return counts;
+  }, [data, day]);
+
+  const totalPlanned = day.exercises.reduce((s, e) => s + e.sets, 0);
+  const totalLogged = day.exercises.reduce(
+    (s, e) => s + todaysLogsForExercise(data, e.exerciseId).length,
+    0,
+  );
 
   const dateLabel = now.toLocaleDateString(undefined, {
     weekday: "long",
     month: "short",
     day: "numeric",
   });
+
+  // Build the initial values when opening the sheet for a new set: reuse the
+  // last logged values so you only nudge what changed.
+  function defaultsFor(exerciseId: string): SetLogValues {
+    const ex = getExercise(exerciseId)!;
+    const last = lastLogForExercise(data, exerciseId);
+    if (last) return { weight: last.weight, reps: last.reps, rir: last.rir };
+    return {
+      weight: data.unit === "kg" ? 20 : 45,
+      reps: ex.repRange.min,
+      rir: ex.targetRIR,
+    };
+  }
+
+  function openAdd(exerciseId: string, setNumber: number) {
+    setSheet({ exerciseId, setNumber, initial: defaultsFor(exerciseId) });
+  }
+
+  function openEdit(log: SetLog, setNumber: number) {
+    setSheet({
+      exerciseId: log.exerciseId,
+      setNumber,
+      editingId: log.id,
+      initial: { weight: log.weight, reps: log.reps, rir: log.rir },
+    });
+  }
+
+  function handleSave(values: SetLogValues) {
+    if (!sheet) return;
+    if (sheet.editingId) {
+      update((d) => updateSet(d, sheet.editingId!, values));
+    } else {
+      update((d) => addSet(d, { exerciseId: sheet.exerciseId, ...values }));
+    }
+    setSheet(null);
+  }
+
+  function handleDelete() {
+    if (!sheet?.editingId) return;
+    update((d) => deleteSet(d, sheet.editingId!));
+    setSheet(null);
+  }
+
+  const sheetExercise = sheet ? getExercise(sheet.exerciseId) : null;
 
   return (
     <div>
@@ -47,28 +125,34 @@ export default function TodayPage() {
       {!isToday && (
         <Card className="mb-4 border-warning/30 bg-warning/10">
           <p className="text-sm text-warning">
-            Rest day. Here&apos;s your next session so you can preview or get
-            ahead.
+            Rest day — but you can still log a session here if you train today.
           </p>
         </Card>
       )}
 
-      {/* Quick summary chips */}
+      {/* Summary chips: live logged vs planned. */}
       <div className="mb-4 flex flex-wrap gap-2">
-        <Pill>{day.exercises.length} exercises</Pill>
-        <Pill>{totalSets} working sets</Pill>
-        {Object.entries(plannedSets).map(([m, n]) => (
-          <Pill key={m}>
-            {MUSCLE_LABELS[m as MuscleGroup]}: {n}
-          </Pill>
-        ))}
+        <Pill>
+          {totalLogged}/{totalPlanned} sets done
+        </Pill>
+        {Object.entries(plannedByMuscle).map(([m, planned]) => {
+          const done = loggedByMuscle[m as MuscleGroup] ?? 0;
+          return (
+            <Pill key={m}>
+              {MUSCLE_LABELS[m as MuscleGroup]}: {done}/{planned}
+            </Pill>
+          );
+        })}
       </div>
 
-      {/* Exercise list with stubbed logging buttons */}
       <div className="space-y-3">
         {day.exercises.map((item) => {
           const ex = getExercise(item.exerciseId);
           if (!ex) return null;
+          const logs = todaysLogsForExercise(data, item.exerciseId);
+          // Show at least the planned number of slots; allow extras beyond.
+          const slots = Math.max(item.sets, logs.length);
+
           return (
             <Card key={item.exerciseId}>
               <div className="flex items-start justify-between gap-3">
@@ -82,34 +166,87 @@ export default function TodayPage() {
                   </p>
                 </div>
                 <span className="shrink-0 rounded-lg bg-surface-2 px-2.5 py-1 text-sm font-medium text-muted">
-                  {item.sets} sets
+                  {logs.length}/{item.sets}
                 </span>
               </div>
 
-              {/* Per-set log buttons (stubbed in Phase 1). */}
-              <div className="mt-3 grid grid-cols-1 gap-2">
-                {Array.from({ length: item.sets }).map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    disabled
-                    className="flex items-center justify-between rounded-xl border border-dashed border-border bg-surface-2/50 px-4 py-3 text-left text-sm text-muted disabled:cursor-not-allowed"
-                  >
-                    <span className="font-medium">Set {i + 1}</span>
-                    <span className="text-xs">Tap to log (coming Phase 2)</span>
-                  </button>
-                ))}
+              <div className="mt-3 space-y-2">
+                {Array.from({ length: slots }).map((_, i) => {
+                  const log = logs[i];
+                  const setNumber = i + 1;
+                  if (log) {
+                    return (
+                      <button
+                        key={log.id}
+                        type="button"
+                        onClick={() => openEdit(log, setNumber)}
+                        className="flex w-full items-center justify-between rounded-xl border border-border bg-surface-2 px-4 py-3 text-left active:bg-border"
+                      >
+                        <span className="flex items-center gap-3">
+                          <span className="text-sm font-semibold text-muted">
+                            Set {setNumber}
+                          </span>
+                          <span className="text-base font-bold">
+                            {formatWeight(log.weight)} {data.unit} ×{" "}
+                            {log.reps}
+                          </span>
+                        </span>
+                        <span className="rounded-md bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
+                          {log.rir} RIR
+                        </span>
+                      </button>
+                    );
+                  }
+                  return (
+                    <button
+                      key={`empty-${i}`}
+                      type="button"
+                      onClick={() => openAdd(item.exerciseId, setNumber)}
+                      className="flex w-full items-center justify-between rounded-xl border border-dashed border-border px-4 py-3 text-left text-muted active:bg-surface-2"
+                    >
+                      <span className="text-sm font-medium">
+                        Set {setNumber}
+                      </span>
+                      <span className="text-xs">Tap to log →</span>
+                    </button>
+                  );
+                })}
+
+                {/* Add an extra set beyond the plan. */}
+                <button
+                  type="button"
+                  onClick={() => openAdd(item.exerciseId, slots + 1)}
+                  className="w-full rounded-xl px-4 py-2 text-center text-sm font-medium text-accent active:bg-surface-2"
+                >
+                  + Add set
+                </button>
               </div>
             </Card>
           );
         })}
       </div>
 
-      <p className="mt-6 text-center text-xs text-muted">
-        {ready
-          ? "Logging arrives in Phase 2 — weight × reps × RIR in one tap."
-          : "Loading your data…"}
-      </p>
+      {!ready && (
+        <p className="mt-6 text-center text-xs text-muted">Loading your data…</p>
+      )}
+
+      {sheet && sheetExercise && (
+        <SetLogSheet
+          exercise={sheetExercise}
+          setNumber={sheet.setNumber}
+          unit={data.unit}
+          step={weightStep(data.unit)}
+          initial={sheet.initial}
+          isEditing={Boolean(sheet.editingId)}
+          onSave={handleSave}
+          onDelete={handleDelete}
+          onClose={() => setSheet(null)}
+        />
+      )}
     </div>
   );
+}
+
+function formatWeight(n: number): string {
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
