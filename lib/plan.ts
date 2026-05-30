@@ -57,3 +57,64 @@ export function exercisesInPlan(data: AppData): Set<string> {
   for (const d of data.split) for (const e of d.exercises) ids.add(e.exerciseId);
   return ids;
 }
+
+// Rename a day (e.g. "Push" → "Upper A").
+export function setDayLabel(
+  data: AppData,
+  dayKey: DayKey,
+  label: string,
+): AppData {
+  const split = data.split.map((d) =>
+    d.key === dayKey ? { ...d, label: label.trim() || d.label } : d,
+  );
+  return { ...data, split };
+}
+
+// Move an exercise up or down within its day.
+export function moveExercise(
+  data: AppData,
+  dayKey: DayKey,
+  exerciseId: string,
+  direction: "up" | "down",
+): AppData {
+  const split = data.split.map((d) => {
+    if (d.key !== dayKey) return d;
+    const idx = d.exercises.findIndex((e) => e.exerciseId === exerciseId);
+    if (idx === -1) return d;
+    const target = direction === "up" ? idx - 1 : idx + 1;
+    if (target < 0 || target >= d.exercises.length) return d;
+    const exercises = [...d.exercises];
+    [exercises[idx], exercises[target]] = [exercises[target], exercises[idx]];
+    return { ...d, exercises };
+  });
+  return { ...data, split };
+}
+
+// Remove an exercise from a day.
+export function removeExerciseFromDay(
+  data: AppData,
+  dayKey: DayKey,
+  exerciseId: string,
+): AppData {
+  const split = data.split.map((d) =>
+    d.key === dayKey
+      ? { ...d, exercises: d.exercises.filter((e) => e.exerciseId !== exerciseId) }
+      : d,
+  );
+  return { ...data, split };
+}
+
+// Add an exercise to the end of a day (no-op if already present).
+export function addExerciseToDay(
+  data: AppData,
+  dayKey: DayKey,
+  exerciseId: string,
+  sets = 3,
+): AppData {
+  const split = data.split.map((d) => {
+    if (d.key !== dayKey) return d;
+    if (d.exercises.some((e) => e.exerciseId === exerciseId)) return d;
+    return { ...d, exercises: [...d.exercises, { exerciseId, sets }] };
+  });
+  return { ...data, split };
+}

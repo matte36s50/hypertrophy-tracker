@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAppData } from "@/components/DataProvider";
-import { Card, PageHeader, Pill } from "@/components/ui";
+import { useRestTimer } from "@/components/RestTimerProvider";
+import { Card, Pill } from "@/components/ui";
 import { SetLogSheet, type SetLogValues } from "@/components/SetLogSheet";
 import { SwapSheet } from "@/components/SwapSheet";
 import { getExercise } from "@/lib/exercises";
@@ -30,6 +32,7 @@ interface SheetTarget {
 
 export default function TodayPage() {
   const { data, update, ready } = useAppData();
+  const restTimer = useRestTimer();
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
   // Exercise id currently open in the swap/edit sheet.
   const [swapId, setSwapId] = useState<string | null>(null);
@@ -108,6 +111,8 @@ export default function TodayPage() {
       update((d) => updateSet(d, sheet.editingId!, values));
     } else {
       update((d) => addSet(d, { exerciseId: sheet.exerciseId, ...values }));
+      // Start the rest timer after logging a new set (not when editing).
+      restTimer.start();
     }
     setSheet(null);
   }
@@ -136,10 +141,20 @@ export default function TodayPage() {
 
   return (
     <div>
-      <PageHeader
-        title={isToday ? `Today · ${day.label}` : `Next: ${day.label}`}
-        subtitle={dateLabel}
-      />
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {isToday ? `Today · ${day.label}` : `Next: ${day.label}`}
+          </h1>
+          <p className="mt-1 text-sm text-muted">{dateLabel}</p>
+        </div>
+        <Link
+          href="/plan"
+          className="shrink-0 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm font-medium text-accent active:bg-border"
+        >
+          Edit plan
+        </Link>
+      </div>
 
       {!isToday && (
         <Card className="mb-4 border-warning/30 bg-warning/10">

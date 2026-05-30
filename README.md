@@ -24,6 +24,8 @@ Nippard-style exercise tiers.
 - **Phase 4 (done):** Tier-ranked swap suggestions — swap any exercise in your
   plan for a same-muscle alternative (S→A→B) and adjust set counts, with an
   "In plan" marker in the library.
+- **Polish:** auto-starting rest timer (with ±30s / skip), and a plan editor
+  (`/plan`) to rename days, reorder, add/remove exercises and adjust set counts.
 - **Phase 5 (optional):** cloud sync + login.
 
 ## Run locally

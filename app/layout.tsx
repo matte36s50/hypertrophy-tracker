@@ -3,6 +3,8 @@ import "./globals.css";
 import { DataProvider } from "@/components/DataProvider";
 import { BottomNav } from "@/components/BottomNav";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
+import { RestTimerProvider } from "@/components/RestTimerProvider";
+import { RestTimerBar } from "@/components/RestTimerBar";
 
 export const metadata: Metadata = {
   title: "Hypertrophy Tracker",
@@ -38,11 +40,14 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-dvh font-sans antialiased">
         <DataProvider>
-          {/* Main scroll area. Bottom padding leaves room for the nav bar. */}
-          <main className="mx-auto w-full max-w-md px-4 pb-28 pt-4">
-            {children}
-          </main>
-          <BottomNav />
+          <RestTimerProvider>
+            {/* Main scroll area. Bottom padding leaves room for the nav bar. */}
+            <main className="mx-auto w-full max-w-md px-4 pb-28 pt-4">
+              {children}
+            </main>
+            <RestTimerBar />
+            <BottomNav />
+          </RestTimerProvider>
         </DataProvider>
         <ServiceWorkerRegistrar />
       </body>
