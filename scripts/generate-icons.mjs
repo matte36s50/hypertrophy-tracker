@@ -1,5 +1,5 @@
 // Generates the PWA PNG icons with no external dependencies (uses Node's zlib).
-// Draws a dark square with a blue dumbbell. Run: node scripts/generate-icons.mjs
+// Draws a light square with a green dumbbell. Run: node scripts/generate-icons.mjs
 import { deflateSync } from "node:zlib";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -59,9 +59,9 @@ function hex(c) {
   ];
 }
 function draw(size) {
-  const bg = hex("#0b0f14");
-  const ring = hex("#141b24");
-  const blue = hex("#3b82f6");
+  const bg = hex("#eef1ee");
+  const ring = hex("#e7ebe7");
+  const blue = hex("#10a05a");
   const rgba = Buffer.alloc(size * size * 4);
   const cx = size / 2;
   const cy = size / 2;

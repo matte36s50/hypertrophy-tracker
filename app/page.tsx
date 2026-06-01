@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useAppData } from "@/components/DataProvider";
 import { useRestTimer } from "@/components/RestTimerProvider";
-import { Card, Pill } from "@/components/ui";
+import { Card, RingProgress, formatWeight } from "@/components/ui";
+import { IconArrowUp, IconChevron, IconEdit, IconPlus, IconSwap } from "@/components/icons";
 import { SetLogSheet, type SetLogValues } from "@/components/SetLogSheet";
 import { SwapSheet } from "@/components/SwapSheet";
 import { getExercise } from "@/lib/exercises";
@@ -31,7 +32,8 @@ interface SheetTarget {
 }
 
 export default function TodayPage() {
-  const { data, update, ready } = useAppData();
+  const { data, ready, update } = useAppData();
+  const router = useRouter();
   const restTimer = useRestTimer();
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
   // Exercise id currently open in the swap/edit sheet.
@@ -44,27 +46,23 @@ export default function TodayPage() {
     [weekday, data.split],
   );
 
-  // Planned sets per muscle for this session.
-  const plannedByMuscle = useMemo(() => {
-    const counts: Partial<Record<MuscleGroup, number>> = {};
+  // Planned & logged sets per muscle for this session (live running counts).
+  const muscleBreakdown = useMemo(() => {
+    const planned: Partial<Record<MuscleGroup, number>> = {};
+    const done: Partial<Record<MuscleGroup, number>> = {};
     for (const item of day.exercises) {
       const ex = getExercise(item.exerciseId);
       if (!ex) continue;
-      counts[ex.primaryMuscle] = (counts[ex.primaryMuscle] ?? 0) + item.sets;
+      planned[ex.primaryMuscle] = (planned[ex.primaryMuscle] ?? 0) + item.sets;
+      done[ex.primaryMuscle] =
+        (done[ex.primaryMuscle] ?? 0) +
+        todaysLogsForExercise(data, item.exerciseId).length;
     }
-    return counts;
-  }, [day]);
-
-  // Sets actually logged today per muscle (live running count).
-  const loggedByMuscle = useMemo(() => {
-    const counts: Partial<Record<MuscleGroup, number>> = {};
-    for (const item of day.exercises) {
-      const ex = getExercise(item.exerciseId);
-      if (!ex) continue;
-      const n = todaysLogsForExercise(data, item.exerciseId).length;
-      counts[ex.primaryMuscle] = (counts[ex.primaryMuscle] ?? 0) + n;
-    }
-    return counts;
+    return (Object.keys(planned) as MuscleGroup[]).map((m) => ({
+      m,
+      planned: planned[m] ?? 0,
+      done: done[m] ?? 0,
+    }));
   }, [data, day]);
 
   const totalPlanned = day.exercises.reduce((s, e) => s + e.sets, 0);
@@ -72,6 +70,7 @@ export default function TodayPage() {
     (s, e) => s + todaysLogsForExercise(data, e.exerciseId).length,
     0,
   );
+  const left = totalPlanned - totalLogged;
 
   const dateLabel = now.toLocaleDateString(undefined, {
     weekday: "long",
@@ -139,47 +138,69 @@ export default function TodayPage() {
   const swapSets =
     day.exercises.find((e) => e.exerciseId === swapId)?.sets ?? 3;
 
+  const statusLine =
+    totalPlanned > 0 && totalLogged >= totalPlanned
+      ? "Session complete 🎉"
+      : totalLogged === 0
+        ? "Ready to train"
+        : "In progress";
+
   return (
     <div>
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {isToday ? `Today · ${day.label}` : `Next: ${day.label}`}
+      {/* Header */}
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-[13px] font-bold uppercase tracking-[0.04em] text-accent-text">
+            {isToday ? "Today" : "Next up"}
+          </div>
+          <h1 className="mt-0.5 whitespace-nowrap text-[30px] font-extrabold tracking-[-0.02em]">
+            {day.label} Day
           </h1>
-          <p className="mt-1 text-sm text-muted">{dateLabel}</p>
+          <p className="mt-1 text-sm font-medium text-text-2">{dateLabel}</p>
         </div>
-        <Link
-          href="/plan"
-          className="shrink-0 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm font-medium text-accent active:bg-border"
+        <button
+          type="button"
+          onClick={() => router.push("/plan")}
+          className="flex shrink-0 items-center gap-1.5 rounded-input border border-border bg-surface px-3 py-2.5 text-[13.5px] font-bold text-text shadow-card active:bg-surface-2"
         >
-          Edit plan
-        </Link>
+          <IconEdit s={15} /> Plan
+        </button>
       </div>
 
-      {!isToday && (
-        <Card className="mb-4 border-warning/30 bg-warning/10">
-          <p className="text-sm text-warning">
-            Rest day — but you can still log a session here if you train today.
-          </p>
-        </Card>
-      )}
+      {/* Session progress card */}
+      <Card className="mb-3.5">
+        <div className="flex items-center gap-4">
+          <RingProgress done={totalLogged} total={totalPlanned} />
+          <div className="min-w-0 flex-1">
+            <div className="text-[15px] font-bold text-text">{statusLine}</div>
+            <div className="mt-0.5 text-[13.5px] font-medium text-text-2">
+              {left > 0
+                ? `${left} sets left across ${day.exercises.length} exercises`
+                : `All ${totalPlanned} sets logged`}
+            </div>
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
+              {muscleBreakdown.map(({ m, planned, done }) => {
+                const met = done >= planned;
+                return (
+                  <span
+                    key={m}
+                    className={`rounded-full px-2 py-[3px] text-[11.5px] font-bold tabular-nums ${
+                      met
+                        ? "bg-accent-soft text-accent-text"
+                        : "bg-surface-2 text-text-3"
+                    }`}
+                  >
+                    {MUSCLE_LABELS[m]} {done}/{planned}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </Card>
 
-      {/* Summary chips: live logged vs planned. */}
-      <div className="mb-4 flex flex-wrap gap-2">
-        <Pill>
-          {totalLogged}/{totalPlanned} sets done
-        </Pill>
-        {Object.entries(plannedByMuscle).map(([m, planned]) => {
-          const done = loggedByMuscle[m as MuscleGroup] ?? 0;
-          return (
-            <Pill key={m}>
-              {MUSCLE_LABELS[m as MuscleGroup]}: {done}/{planned}
-            </Pill>
-          );
-        })}
-      </div>
-
-      <div className="space-y-3">
+      {/* Exercise cards */}
+      <div className="flex flex-col gap-3">
         {day.exercises.map((item) => {
           const ex = getExercise(item.exerciseId);
           if (!ex) return null;
@@ -187,42 +208,56 @@ export default function TodayPage() {
           // Show at least the planned number of slots; allow extras beyond.
           const slots = Math.max(item.sets, logs.length);
           const advice = analyzeExercise(data, item.exerciseId);
+          const ready =
+            advice.status === "add-weight" && advice.suggestedWeight != null;
+          const complete = logs.length >= item.sets;
 
           return (
             <Card key={item.exerciseId}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h2 className="truncate text-base font-semibold">
-                      {ex.name}
-                    </h2>
-                    {advice.status === "add-weight" &&
-                      advice.suggestedWeight != null && (
-                        <span className="shrink-0 rounded-md bg-success/20 px-1.5 py-0.5 text-xs font-bold text-success">
-                          ↑ {formatWeight(advice.suggestedWeight)} {data.unit}
-                        </span>
-                      )}
-                  </div>
-                  <p className="mt-0.5 text-sm text-muted">
+                  <h2 className="text-[17.5px] font-extrabold tracking-[-0.01em]">
+                    {ex.name}
+                  </h2>
+                  <p className="mt-1 text-[13.5px] font-medium text-text-2">
                     {MUSCLE_LABELS[ex.primaryMuscle]} · {ex.repRange.min}–
                     {ex.repRange.max} reps · {ex.targetRIR} RIR
                   </p>
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-1.5">
-                  <span className="rounded-lg bg-surface-2 px-2.5 py-1 text-sm font-medium text-muted">
+                <div className="flex shrink-0 flex-col items-end gap-2">
+                  <span
+                    className={`text-[13.5px] font-extrabold tabular-nums ${
+                      complete ? "text-accent-text" : "text-text-2"
+                    }`}
+                  >
                     {logs.length}/{item.sets}
                   </span>
                   <button
                     type="button"
                     onClick={() => setSwapId(item.exerciseId)}
-                    className="text-xs font-medium text-accent active:opacity-70"
+                    className="flex items-center gap-1.5 text-[12.5px] font-bold text-text-3 active:opacity-70"
                   >
-                    Swap / edit
+                    <IconSwap s={15} /> Swap
                   </button>
                 </div>
               </div>
 
-              <div className="mt-3 space-y-2">
+              {ready && (
+                <div className="mt-3 flex items-center gap-2.5 rounded-input bg-accent-soft px-3 py-2.5">
+                  <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-accent text-accent-contrast">
+                    <IconArrowUp s={15} />
+                  </span>
+                  <span className="text-[13.5px] font-medium text-accent-text">
+                    Add weight — try{" "}
+                    <b className="font-bold">
+                      {formatWeight(advice.suggestedWeight!)} {data.unit}
+                    </b>{" "}
+                    today
+                  </span>
+                </div>
+              )}
+
+              <div className="mt-3 flex flex-col gap-2">
                 {Array.from({ length: slots }).map((_, i) => {
                   const log = logs[i];
                   const setNumber = i + 1;
@@ -232,18 +267,22 @@ export default function TodayPage() {
                         key={log.id}
                         type="button"
                         onClick={() => openEdit(log, setNumber)}
-                        className="flex w-full items-center justify-between rounded-xl border border-border bg-surface-2 px-4 py-3 text-left active:bg-border"
+                        className="flex w-full items-center justify-between rounded-row border border-border bg-surface-2 px-3.5 py-3 text-left active:bg-surface-3"
                       >
-                        <span className="flex items-center gap-3">
-                          <span className="text-sm font-semibold text-muted">
+                        <span className="flex items-baseline gap-3">
+                          <span className="w-[34px] text-[12.5px] font-bold text-text-3">
                             Set {setNumber}
                           </span>
-                          <span className="text-base font-bold">
-                            {formatWeight(log.weight)} {data.unit} ×{" "}
-                            {log.reps}
+                          <span className="text-[19px] font-extrabold tabular-nums text-text">
+                            {formatWeight(log.weight)}
+                            <span className="text-[13px] font-semibold text-text-3">
+                              {" "}
+                              {data.unit}
+                            </span>{" "}
+                            × {log.reps}
                           </span>
                         </span>
-                        <span className="rounded-md bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
+                        <span className="rounded-full bg-accent-soft px-2 py-[3px] text-xs font-extrabold tabular-nums text-accent-text">
                           {log.rir} RIR
                         </span>
                       </button>
@@ -254,12 +293,14 @@ export default function TodayPage() {
                       key={`empty-${i}`}
                       type="button"
                       onClick={() => openAdd(item.exerciseId, setNumber)}
-                      className="flex w-full items-center justify-between rounded-xl border border-dashed border-border px-4 py-3 text-left text-muted active:bg-surface-2"
+                      className="flex w-full items-center justify-between rounded-row border-[1.5px] border-dashed border-border-strong px-3.5 py-3 text-left active:bg-surface-2"
                     >
-                      <span className="text-sm font-medium">
+                      <span className="text-[13.5px] font-bold text-text-2">
                         Set {setNumber}
                       </span>
-                      <span className="text-xs">Tap to log →</span>
+                      <span className="flex items-center gap-1.5 text-[13px] font-bold text-accent-text">
+                        Tap to log <IconChevron s={14} />
+                      </span>
                     </button>
                   );
                 })}
@@ -268,9 +309,9 @@ export default function TodayPage() {
                 <button
                   type="button"
                   onClick={() => openAdd(item.exerciseId, slots + 1)}
-                  className="w-full rounded-xl px-4 py-2 text-center text-sm font-medium text-accent active:bg-surface-2"
+                  className="flex w-full items-center justify-center gap-1.5 pb-0.5 pt-1.5 text-[13.5px] font-bold text-text-3 active:opacity-70"
                 >
-                  + Add set
+                  <IconPlus s={15} /> Add set
                 </button>
               </div>
             </Card>
@@ -279,7 +320,7 @@ export default function TodayPage() {
       </div>
 
       {!ready && (
-        <p className="mt-6 text-center text-xs text-muted">Loading your data…</p>
+        <p className="mt-6 text-center text-xs text-text-3">Loading your data…</p>
       )}
 
       {sheet && sheetExercise && (
@@ -307,8 +348,4 @@ export default function TodayPage() {
       )}
     </div>
   );
-}
-
-function formatWeight(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }

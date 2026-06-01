@@ -1,9 +1,10 @@
 "use client";
 
 import { useRestTimer } from "@/components/RestTimerProvider";
+import { IconFlame, IconCheck } from "@/components/icons";
 
 // Floating rest-timer bar. Sits just above the bottom nav and only shows while
-// a rest is running or has just finished.
+// a rest is running or has just finished. Accent-tinted to match the design.
 export function RestTimerBar() {
   const { remaining, active, finished, addSeconds, skip } = useRestTimer();
 
@@ -13,49 +14,49 @@ export function RestTimerBar() {
   const ss = remaining % 60;
   const time = `${mm}:${ss.toString().padStart(2, "0")}`;
 
+  const chip =
+    "h-9 rounded-chip border border-border bg-surface-3 px-2.5 text-[13px] font-extrabold tabular-nums text-text active:opacity-80";
+
   return (
     <div
       className="fixed inset-x-0 z-40 px-4"
-      style={{ bottom: "calc(env(safe-area-inset-bottom) + 4.5rem)" }}
+      style={{ bottom: "calc(env(safe-area-inset-bottom) + 4.75rem)" }}
     >
       <div className="mx-auto w-full max-w-md">
         {finished ? (
           <button
             type="button"
             onClick={skip}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-success/40 bg-success/20 px-4 py-3 text-base font-bold text-success shadow-lg active:opacity-80"
+            className="flex w-full items-center justify-center gap-2 rounded-btn border border-accent bg-accent px-4 py-3 text-base font-bold text-accent-contrast shadow-lg active:opacity-90"
           >
-            Rest done — go! (tap to dismiss)
+            <IconCheck s={18} /> Rest done — go! (tap to dismiss)
           </button>
         ) : (
-          <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface-2 px-3 py-2 shadow-lg">
-            <span className="text-xs font-medium text-muted">Rest</span>
-            <span className="min-w-[3.5rem] text-center text-xl font-bold tabular-nums">
-              {time}
+          <div className="flex items-center gap-2.5 rounded-btn border border-accent bg-accent-soft px-3 py-2.5 shadow-lg">
+            <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-accent text-accent-contrast">
+              <IconFlame s={17} />
             </span>
-            <div className="ml-auto flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => addSeconds(-30)}
-                className="h-9 rounded-lg border border-border bg-surface px-2.5 text-sm font-semibold active:bg-border"
-              >
-                −30
-              </button>
-              <button
-                type="button"
-                onClick={() => addSeconds(30)}
-                className="h-9 rounded-lg border border-border bg-surface px-2.5 text-sm font-semibold active:bg-border"
-              >
-                +30
-              </button>
-              <button
-                type="button"
-                onClick={skip}
-                className="h-9 rounded-lg border border-border bg-surface px-3 text-sm font-semibold text-muted active:bg-border"
-              >
-                Skip
-              </button>
+            <div className="min-w-0 flex-1">
+              <div className="text-[11.5px] font-bold uppercase tracking-[0.05em] text-accent-text">
+                Rest
+              </div>
+              <div className="text-xl font-extrabold leading-tight tabular-nums text-text">
+                {time}
+              </div>
             </div>
+            <button type="button" onClick={() => addSeconds(-30)} className={chip}>
+              −30
+            </button>
+            <button type="button" onClick={() => addSeconds(30)} className={chip}>
+              +30
+            </button>
+            <button
+              type="button"
+              onClick={skip}
+              className="h-9 rounded-chip border border-transparent bg-accent px-3 text-[13px] font-extrabold text-accent-contrast active:opacity-90"
+            >
+              Skip
+            </button>
           </div>
         )}
       </div>
