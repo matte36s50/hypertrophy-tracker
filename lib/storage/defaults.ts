@@ -6,7 +6,7 @@ import { CURRENT_VERSION } from "./adapter";
 export function makeDefaultData(): AppData {
   return {
     version: CURRENT_VERSION,
-    unit: "kg",
+    unit: "lb",
     // Deep-copy the default split so user edits don't mutate the constant.
     split: JSON.parse(JSON.stringify(DEFAULT_SPLIT)),
     logs: [],
