@@ -54,9 +54,25 @@ const config: Config = {
           from: { transform: "translateY(100%)" },
           to: { transform: "translateY(0)" },
         },
+        // Confetti pieces falling for the workout-complete celebration.
+        confetti: {
+          "0%": { transform: "translateY(-20px) rotate(0deg)", opacity: "1" },
+          "100%": {
+            transform: "translateY(320px) rotate(540deg)",
+            opacity: "0",
+          },
+        },
+        // Trophy / badge pop on the celebration sheet.
+        popIn: {
+          "0%": { transform: "scale(0.5)", opacity: "0" },
+          "60%": { transform: "scale(1.12)", opacity: "1" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         sheetUp: "sheetUp .26s cubic-bezier(.22,.9,.3,1)",
+        confetti: "confetti 1.4s ease-in forwards",
+        popIn: "popIn .5s cubic-bezier(.22,.9,.3,1) both",
       },
     },
   },

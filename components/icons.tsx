@@ -69,6 +69,9 @@ export const IconCheck = ({ s }: IconProps) => <Ic s={s} d="M4 12l5 5L20 6" />;
 export const IconTrash = ({ s }: IconProps) => (
   <Ic s={s} d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
 );
+export const IconTrophy = ({ s }: IconProps) => (
+  <Ic s={s} d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3" />
+);
 export const IconFlame = ({ s }: IconProps) => (
   <Ic s={s} fill="currentColor">
     <path d="M12 2c1 3-1 4-1 6 0 1 .8 2 2 2 .5-1 .6-1.6.6-2.5C16 10 17 12.5 17 15a5 5 0 1 1-10 0c0-2.6 1.6-4.4 3-6 1-1.2 2-3.2 2-7z" />

@@ -14,9 +14,14 @@ export function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
-// Weight step for +/- buttons, sensible per unit.
+// Weight step for the coarse +/- buttons, sensible per unit.
 export function weightStep(unit: AppData["unit"]): number {
   return unit === "kg" ? 2.5 : 5;
+}
+
+// Fine weight step for nudging by the smallest plate (0.5 lb / 0.5 kg).
+export function fineWeightStep(_unit: AppData["unit"]): number {
+  return 0.5;
 }
 
 // All logs for one exercise, newest first.

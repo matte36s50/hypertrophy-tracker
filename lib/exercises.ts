@@ -123,6 +123,16 @@ export const EXERCISES: Exercise[] = [
     note: "Stretches the long head of the triceps.",
   },
   {
+    id: "skull-crushers",
+    name: "Skull Crushers",
+    primaryMuscle: "triceps",
+    tier: "A",
+    equipment: "barbell",
+    repRange: { min: 8, max: 12 },
+    targetRIR: 2,
+    note: "Lying triceps extension — loads the long head hard.",
+  },
+  {
     id: "dips",
     name: "Dips",
     primaryMuscle: "triceps",

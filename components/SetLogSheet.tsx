@@ -17,6 +17,8 @@ interface SetLogSheetProps {
   setNumber: number;
   unit: "kg" | "lb";
   step: number;
+  // Smaller increment for fine weight tweaks (e.g. 0.5 lb microplates).
+  fineStep: number;
   initial: SetLogValues;
   // When editing an existing set we show a Delete button.
   isEditing: boolean;
@@ -32,6 +34,7 @@ export function SetLogSheet({
   setNumber,
   unit,
   step,
+  fineStep,
   initial,
   isEditing,
   onSave,
@@ -42,34 +45,62 @@ export function SetLogSheet({
   const [reps, setReps] = useState(initial.reps);
   const [rir, setRir] = useState(initial.rir);
   const round = (n: number) => Math.round(n * 10) / 10;
+  const nudge = (delta: number) =>
+    setWeight((w) => Math.max(0, round(w + delta)));
 
   const bigBtn =
     "flex h-[52px] w-[52px] items-center justify-center rounded-btn border border-border bg-surface-2 text-2xl font-semibold leading-none text-text active:bg-surface-3";
+  const weightBtn =
+    "flex h-[50px] flex-1 items-center justify-center rounded-btn border border-border bg-surface-2 text-[15px] font-extrabold tabular-nums leading-none text-text active:bg-surface-3";
 
   return (
     <Sheet title={`${exercise.name} · Set ${setNumber}`} onClose={onClose}>
-      {/* Weight */}
-      <Field label={`Weight (${unit})`}>
-        <button
-          type="button"
-          className={bigBtn}
-          onClick={() => setWeight((w) => Math.max(0, round(w - step)))}
-          aria-label="Decrease weight"
-        >
-          −
-        </button>
-        <span className="min-w-[72px] text-center text-[26px] font-extrabold tabular-nums text-text">
-          {formatWeight(weight)}
-        </span>
-        <button
-          type="button"
-          className={bigBtn}
-          onClick={() => setWeight((w) => round(w + step))}
-          aria-label="Increase weight"
-        >
-          +
-        </button>
-      </Field>
+      {/* Weight — coarse (±{step}) and fine (±{fineStep}) steppers. */}
+      <div className="border-b border-border py-3">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-[15px] font-bold text-text">Weight</span>
+          <span className="text-[26px] font-extrabold tabular-nums text-text">
+            {formatWeight(weight)}
+            <span className="ml-1 text-[14px] font-semibold text-text-3">
+              {unit}
+            </span>
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={weightBtn}
+            onClick={() => nudge(-step)}
+            aria-label={`Decrease weight by ${formatWeight(step)}`}
+          >
+            −{formatWeight(step)}
+          </button>
+          <button
+            type="button"
+            className={weightBtn}
+            onClick={() => nudge(-fineStep)}
+            aria-label={`Decrease weight by ${formatWeight(fineStep)}`}
+          >
+            −{formatWeight(fineStep)}
+          </button>
+          <button
+            type="button"
+            className={weightBtn}
+            onClick={() => nudge(fineStep)}
+            aria-label={`Increase weight by ${formatWeight(fineStep)}`}
+          >
+            +{formatWeight(fineStep)}
+          </button>
+          <button
+            type="button"
+            className={weightBtn}
+            onClick={() => nudge(step)}
+            aria-label={`Increase weight by ${formatWeight(step)}`}
+          >
+            +{formatWeight(step)}
+          </button>
+        </div>
+      </div>
 
       {/* Reps */}
       <Field label="Reps">

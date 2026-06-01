@@ -27,7 +27,7 @@ export function Sheet({
       onClick={onClose}
     >
       <div
-        className="max-h-[86%] w-full max-w-md animate-sheetUp overflow-y-auto rounded-t-[26px] border-t border-border bg-surface px-[18px] pt-2.5 shadow-sheet"
+        className="relative max-h-[86%] w-full max-w-md animate-sheetUp overflow-y-auto rounded-t-[26px] border-t border-border bg-surface px-[18px] pt-2.5 shadow-sheet"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}
         onClick={(e) => e.stopPropagation()}
       >

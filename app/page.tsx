@@ -5,9 +5,17 @@ import { useMemo, useState } from "react";
 import { useAppData } from "@/components/DataProvider";
 import { useRestTimer } from "@/components/RestTimerProvider";
 import { Card, RingProgress, formatWeight } from "@/components/ui";
-import { IconArrowUp, IconChevron, IconEdit, IconPlus, IconSwap } from "@/components/icons";
+import {
+  IconArrowUp,
+  IconChevron,
+  IconEdit,
+  IconPlus,
+  IconSwap,
+  IconTrophy,
+} from "@/components/icons";
 import { SetLogSheet, type SetLogValues } from "@/components/SetLogSheet";
 import { SwapSheet } from "@/components/SwapSheet";
+import { WorkoutCompleteSheet } from "@/components/WorkoutCompleteSheet";
 import { getExercise } from "@/lib/exercises";
 import { setExerciseSets, swapExerciseInSplit } from "@/lib/plan";
 import { dayForWeekday } from "@/lib/split";
@@ -15,6 +23,8 @@ import { MUSCLE_LABELS } from "@/lib/muscles";
 import {
   addSet,
   deleteSet,
+  fineWeightStep,
+  isSameDay,
   lastLogForExercise,
   todaysLogsForExercise,
   updateSet,
@@ -38,6 +48,8 @@ export default function TodayPage() {
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
   // Exercise id currently open in the swap/edit sheet.
   const [swapId, setSwapId] = useState<string | null>(null);
+  // Whether the workout-complete celebration sheet is showing.
+  const [showComplete, setShowComplete] = useState(false);
 
   const now = new Date();
   const weekday = now.getDay();
@@ -71,6 +83,19 @@ export default function TodayPage() {
     0,
   );
   const left = totalPlanned - totalLogged;
+  const sessionComplete = totalPlanned > 0 && totalLogged >= totalPlanned;
+
+  // Recap stats for the finish celebration: everything logged today, including
+  // any extra sets or swapped exercises.
+  const todaysLogs = data.logs.filter((l) =>
+    isSameDay(new Date(l.loggedAt), now),
+  );
+  const sessionVolume = todaysLogs.reduce((s, l) => s + l.weight * l.reps, 0);
+  const musclesTrained = new Set(
+    todaysLogs
+      .map((l) => getExercise(l.exerciseId)?.primaryMuscle)
+      .filter(Boolean),
+  ).size;
 
   const dateLabel = now.toLocaleDateString(undefined, {
     weekday: "long",
@@ -319,6 +344,28 @@ export default function TodayPage() {
         })}
       </div>
 
+      {/* Finish the workout: a celebratory complete when every set is in, or an
+          end-early option once anything has been logged. */}
+      {totalLogged > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowComplete(true)}
+          className={`mt-4 flex h-[54px] w-full items-center justify-center gap-2 rounded-btn text-base font-bold transition-transform active:scale-[0.99] ${
+            sessionComplete
+              ? "border border-accent bg-accent text-accent-contrast shadow-card"
+              : "border border-border bg-surface text-text-2"
+          }`}
+        >
+          {sessionComplete ? (
+            <>
+              <IconTrophy s={19} /> Finish workout
+            </>
+          ) : (
+            "End workout early"
+          )}
+        </button>
+      )}
+
       {!ready && (
         <p className="mt-6 text-center text-xs text-text-3">Loading your data…</p>
       )}
@@ -329,6 +376,7 @@ export default function TodayPage() {
           setNumber={sheet.setNumber}
           unit={data.unit}
           step={weightStep(data.unit)}
+          fineStep={fineWeightStep(data.unit)}
           initial={sheet.initial}
           isEditing={Boolean(sheet.editingId)}
           onSave={handleSave}
@@ -344,6 +392,22 @@ export default function TodayPage() {
           onSwap={handleSwap}
           onSetsChange={handleSetsChange}
           onClose={() => setSwapId(null)}
+        />
+      )}
+
+      {showComplete && (
+        <WorkoutCompleteSheet
+          complete={sessionComplete}
+          dayLabel={day.label}
+          setsLogged={todaysLogs.length}
+          volume={sessionVolume}
+          unit={data.unit}
+          musclesTrained={musclesTrained}
+          onViewProgress={() => {
+            setShowComplete(false);
+            router.push("/progression");
+          }}
+          onClose={() => setShowComplete(false)}
         />
       )}
     </div>
