@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html,
 body {
-  background-color: #0b0f14;
-  color: #e7edf3;
+  background-color: #eef1ee;
+  color: #16201b;
   -webkit-tap-highlight-color: transparent;
   /* Prevent the iOS "rubber band" white flash and stop text auto-zoom. */
   overscroll-behavior-y: none;
@@ -26,6 +26,12 @@ body {
 button,
 a {
   touch-action: manipulation;
+}
+
+/* Tabular figures for every weight / rep / set / timer value (design spec). */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 /* Hide number-input spinners for a cleaner mobile look. */

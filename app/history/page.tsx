@@ -2,17 +2,34 @@
 
 import { useMemo, useState } from "react";
 import { useAppData } from "@/components/DataProvider";
-import { Card, PageHeader } from "@/components/ui";
+import { Card, PageHeader, SectionLabel, formatWeight } from "@/components/ui";
 import { LineChart } from "@/components/LineChart";
+import { IconChevDown, IconCheck, IconHistory } from "@/components/icons";
 import { getExercise } from "@/lib/exercises";
 import { loggedExerciseIds, seriesForExercise } from "@/lib/history";
+import { sessionsForExercise } from "@/lib/progression";
 
 export default function HistoryPage() {
   const { data } = useAppData();
   const ids = useMemo(() => loggedExerciseIds(data), [data]);
   const [selected, setSelected] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
-  const activeId = selected ?? ids[0] ?? null;
+  // Default to the exercise with the most logged sessions so a trend shows.
+  const richest = useMemo(() => {
+    let best = ids[0] ?? null;
+    let bestN = -1;
+    for (const id of ids) {
+      const n = sessionsForExercise(data, id).length;
+      if (n > bestN) {
+        bestN = n;
+        best = id;
+      }
+    }
+    return best;
+  }, [data, ids]);
+
+  const activeId = selected ?? richest ?? null;
   const series = useMemo(
     () => (activeId ? seriesForExercise(data, activeId) : []),
     [data, activeId],
@@ -22,15 +39,17 @@ export default function HistoryPage() {
     return (
       <div>
         <PageHeader
-          title="History & Progress"
-          subtitle="Charts of weight and total volume per exercise over time."
+          title="History"
+          subtitle="Charts of weight and volume per exercise."
         />
-        <Card className="flex flex-col items-center gap-3 py-10 text-center">
-          <ChartIcon />
-          <h2 className="text-lg font-semibold">No data yet</h2>
-          <p className="max-w-xs text-sm text-muted">
-            Log a few sessions on the Today tab and your weight and volume
-            trends will appear here.
+        <Card className="flex flex-col items-center gap-3 py-9 text-center">
+          <span className="text-accent-text">
+            <IconHistory s={48} />
+          </span>
+          <h2 className="text-lg font-extrabold">No data yet</h2>
+          <p className="max-w-[240px] text-sm leading-relaxed text-text-2">
+            Log a few sessions and your weight &amp; volume trends will appear
+            here.
           </p>
         </Card>
       </div>
@@ -38,10 +57,7 @@ export default function HistoryPage() {
   }
 
   const ex = activeId ? getExercise(activeId) : null;
-  const weightPoints = series.map((s) => ({
-    label: s.label,
-    value: s.topWeight,
-  }));
+  const weightPoints = series.map((s) => ({ label: s.label, value: s.topWeight }));
   const volumePoints = series.map((s) => ({
     label: s.label,
     value: s.totalVolume,
@@ -49,88 +65,90 @@ export default function HistoryPage() {
 
   return (
     <div>
-      <PageHeader
-        title="History & Progress"
-        subtitle="Pick an exercise to see your trends."
-      />
+      <PageHeader title="History" subtitle="Pick an exercise to see your trends." />
 
-      {/* Exercise picker */}
-      <select
-        value={activeId ?? ""}
-        onChange={(e) => setSelected(e.target.value)}
-        className="mb-4 h-12 w-full rounded-xl border border-border bg-surface-2 px-3 text-base font-medium text-text outline-none focus:border-accent"
-      >
-        {ids.map((id) => (
-          <option key={id} value={id}>
-            {getExercise(id)?.name ?? id}
-          </option>
-        ))}
-      </select>
+      {/* Custom dropdown picker */}
+      <div className="relative mb-3.5">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="flex w-full items-center justify-between rounded-btn border border-border bg-surface px-4 py-3 shadow-card"
+        >
+          <span className="text-[15.5px] font-bold text-text">{ex?.name}</span>
+          <span
+            className={`text-text-3 transition-transform ${open ? "rotate-180" : ""}`}
+          >
+            <IconChevDown s={18} />
+          </span>
+        </button>
+        {open && (
+          <div className="absolute inset-x-0 top-[calc(100%+6px)] z-30 max-h-[260px] overflow-y-auto rounded-btn border border-border bg-surface shadow-pop">
+            {ids.map((id) => {
+              const isActive = id === activeId;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    setSelected(id);
+                    setOpen(false);
+                  }}
+                  className={`flex w-full items-center justify-between px-4 py-3 text-left text-[14.5px] ${
+                    isActive
+                      ? "bg-accent-soft font-extrabold text-accent-text"
+                      : "font-semibold text-text"
+                  }`}
+                >
+                  {getExercise(id)?.name ?? id}
+                  {isActive && <IconCheck s={16} />}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
-      {series.length === 1 && (
-        <Card className="mb-4 border-accent/30 bg-accent/5">
-          <p className="text-sm text-muted">
-            One session logged so far — log another to see a trend line form.
-          </p>
-        </Card>
-      )}
-
-      <Card className="mb-4">
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
+      <Card className="mb-3">
+        <SectionLabel className="mb-1">
           Top set weight ({data.unit})
-        </h2>
-        <LineChart points={weightPoints} unit={data.unit} color="#3b82f6" />
+        </SectionLabel>
+        <LineChart points={weightPoints} unit={data.unit} color="#10a05a" />
       </Card>
 
-      <Card className="mb-4">
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
+      <Card className="mb-3">
+        <SectionLabel className="mb-1">
           Total volume ({data.unit} × reps)
-        </h2>
-        <LineChart points={volumePoints} color="#22c55e" />
+        </SectionLabel>
+        <LineChart points={volumePoints} color="#5b665f" />
       </Card>
 
-      {/* Recent sessions table */}
+      {/* Recent sessions */}
       <Card>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
-          {ex?.name} — recent sessions
-        </h2>
-        <div className="space-y-2">
-          {[...series].reverse().map((s, i) => (
+        <SectionLabel>{ex?.name} — recent sessions</SectionLabel>
+        <div className="flex flex-col">
+          {[...series].reverse().map((s, i, arr) => (
             <div
               key={i}
-              className="flex items-center justify-between border-b border-border/60 pb-2 last:border-0 last:pb-0"
+              className={`flex items-center justify-between py-2.5 ${
+                i === arr.length - 1 ? "" : "border-b border-border"
+              }`}
             >
-              <span className="text-sm text-muted">{s.label}</span>
-              <span className="text-sm">
-                <span className="font-semibold">
-                  {s.topWeight} {data.unit}
-                </span>{" "}
-                · best {s.bestReps} reps · {s.sets} sets
+              <span className="text-[13.5px] font-semibold tabular-nums text-text-2">
+                {s.label}
+              </span>
+              <span className="text-[13.5px] tabular-nums text-text">
+                <b className="font-extrabold">
+                  {formatWeight(s.topWeight)} {data.unit}
+                </b>
+                <span className="font-semibold text-text-3">
+                  {" "}
+                  · best {s.bestReps} · {s.sets} sets
+                </span>
               </span>
             </div>
           ))}
         </div>
       </Card>
     </div>
-  );
-}
-
-function ChartIcon() {
-  return (
-    <svg
-      width="56"
-      height="56"
-      viewBox="0 0 24 24"
-      fill="none"
-      className="text-accent"
-      aria-hidden
-    >
-      <path
-        d="M4 20V10M10 20V4M16 20v-7M22 20H2"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
   );
 }

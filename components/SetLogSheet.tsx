@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Exercise } from "@/lib/types";
+import { Sheet, SheetButton } from "@/components/Sheet";
+import { formatWeight } from "@/components/ui";
+import { IconCheck, IconTrash } from "@/components/icons";
 
 export interface SetLogValues {
   weight: number;
@@ -22,8 +25,8 @@ interface SetLogSheetProps {
   onClose: () => void;
 }
 
-// A bottom-sheet for logging one set: weight × reps × RIR.
-// Designed for thumbs: big +/- steppers and tap-to-pick RIR.
+// Bottom-sheet for logging one set: weight × reps × RIR. Designed for thumbs:
+// big +/- steppers and a tap-to-pick RIR segment selector.
 export function SetLogSheet({
   exercise,
   setNumber,
@@ -38,164 +41,111 @@ export function SetLogSheet({
   const [weight, setWeight] = useState(initial.weight);
   const [reps, setReps] = useState(initial.reps);
   const [rir, setRir] = useState(initial.rir);
+  const round = (n: number) => Math.round(n * 10) / 10;
 
-  // Close on Escape for desktop testing.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  const clamp = (n: number, min: number) => (n < min ? min : n);
+  const bigBtn =
+    "flex h-[52px] w-[52px] items-center justify-center rounded-btn border border-border bg-surface-2 text-2xl font-semibold leading-none text-text active:bg-surface-3";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md rounded-t-3xl border-t border-border bg-surface p-5"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Grab handle */}
-        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-border" />
-
-        <div className="mb-1 text-center">
-          <h2 className="text-lg font-bold">{exercise.name}</h2>
-          <p className="text-sm text-muted">
-            Set {setNumber} · target {exercise.repRange.min}–
-            {exercise.repRange.max} reps @ {exercise.targetRIR} RIR
-          </p>
-        </div>
-
-        {/* Weight */}
-        <Stepper
-          label={`Weight (${unit})`}
-          value={weight}
-          display={formatWeight(weight)}
-          onDec={() => setWeight((w) => clamp(round(w - step), 0))}
-          onInc={() => setWeight((w) => round(w + step))}
-          onInput={(v) => setWeight(clamp(v, 0))}
-        />
-
-        {/* Reps */}
-        <Stepper
-          label="Reps"
-          value={reps}
-          display={String(reps)}
-          onDec={() => setReps((r) => clamp(r - 1, 0))}
-          onInc={() => setReps((r) => r + 1)}
-          onInput={(v) => setReps(clamp(Math.round(v), 0))}
-        />
-
-        {/* RIR quick-select */}
-        <div className="mb-5">
-          <p className="mb-2 text-sm font-medium text-muted">
-            RIR (reps in reserve)
-          </p>
-          <div className="grid grid-cols-6 gap-2">
-            {[0, 1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setRir(n)}
-                className={`h-12 rounded-xl border text-base font-semibold transition-colors ${
-                  rir === n
-                    ? "border-accent bg-accent text-white"
-                    : "border-border bg-surface-2 text-text"
-                }`}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Actions */}
+    <Sheet title={`${exercise.name} · Set ${setNumber}`} onClose={onClose}>
+      {/* Weight */}
+      <Field label={`Weight (${unit})`}>
         <button
           type="button"
-          onClick={() => onSave({ weight, reps, rir })}
-          className="mb-2 h-14 w-full rounded-2xl bg-accent text-lg font-bold text-white active:bg-accent-strong"
-        >
-          {isEditing ? "Save changes" : "Log set"}
-        </button>
-
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-12 flex-1 rounded-xl border border-border bg-surface-2 font-medium text-text"
-          >
-            Cancel
-          </button>
-          {isEditing && onDelete && (
-            <button
-              type="button"
-              onClick={onDelete}
-              className="h-12 flex-1 rounded-xl border border-danger/40 bg-danger/10 font-medium text-danger"
-            >
-              Delete set
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Stepper({
-  label,
-  value,
-  display,
-  onDec,
-  onInc,
-  onInput,
-}: {
-  label: string;
-  value: number;
-  display: string;
-  onDec: () => void;
-  onInc: () => void;
-  onInput: (v: number) => void;
-}) {
-  return (
-    <div className="mb-4">
-      <p className="mb-2 text-sm font-medium text-muted">{label}</p>
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onDec}
-          className="h-14 w-14 shrink-0 rounded-2xl border border-border bg-surface-2 text-2xl font-bold active:bg-border"
-          aria-label={`Decrease ${label}`}
+          className={bigBtn}
+          onClick={() => setWeight((w) => Math.max(0, round(w - step)))}
+          aria-label="Decrease weight"
         >
           −
         </button>
-        <input
-          type="number"
-          inputMode="decimal"
-          value={Number.isNaN(value) ? "" : display}
-          onChange={(e) => onInput(parseFloat(e.target.value))}
-          className="h-14 min-w-0 flex-1 rounded-2xl border border-border bg-surface-2 text-center text-2xl font-bold text-text outline-none focus:border-accent"
-        />
+        <span className="min-w-[72px] text-center text-[26px] font-extrabold tabular-nums text-text">
+          {formatWeight(weight)}
+        </span>
         <button
           type="button"
-          onClick={onInc}
-          className="h-14 w-14 shrink-0 rounded-2xl border border-border bg-surface-2 text-2xl font-bold active:bg-border"
-          aria-label={`Increase ${label}`}
+          className={bigBtn}
+          onClick={() => setWeight((w) => round(w + step))}
+          aria-label="Increase weight"
         >
           +
         </button>
+      </Field>
+
+      {/* Reps */}
+      <Field label="Reps">
+        <button
+          type="button"
+          className={bigBtn}
+          onClick={() => setReps((r) => Math.max(1, r - 1))}
+          aria-label="Decrease reps"
+        >
+          −
+        </button>
+        <span className="min-w-[72px] text-center text-[26px] font-extrabold tabular-nums text-text">
+          {reps}
+        </span>
+        <button
+          type="button"
+          className={bigBtn}
+          onClick={() => setReps((r) => r + 1)}
+          aria-label="Increase reps"
+        >
+          +
+        </button>
+      </Field>
+
+      {/* RIR — 5-segment selector (0–4). */}
+      <div className="pb-1 pt-3.5">
+        <div className="mb-2.5 flex items-center justify-between">
+          <span className="text-[15px] font-bold text-text">Reps in reserve</span>
+          <span className="text-[13px] font-semibold text-text-3">
+            target {exercise.targetRIR}
+          </span>
+        </div>
+        <div className="flex gap-2">
+          {[0, 1, 2, 3, 4].map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setRir(v)}
+              className={`h-[46px] flex-1 rounded-input border text-base font-extrabold tabular-nums ${
+                rir === v
+                  ? "border-accent bg-accent text-accent-contrast"
+                  : "border-border bg-surface-2 text-text-2"
+              }`}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Actions */}
+      <div className="mt-[18px] flex flex-col gap-2.5">
+        <SheetButton onClick={() => onSave({ weight, reps, rir })}>
+          <IconCheck s={18} /> {isEditing ? "Save changes" : "Log set"}
+        </SheetButton>
+        {isEditing && onDelete && (
+          <SheetButton variant="danger" onClick={onDelete}>
+            <IconTrash s={16} /> Delete set
+          </SheetButton>
+        )}
+      </div>
+    </Sheet>
   );
 }
 
-// Round to 1 decimal to avoid floating-point noise from repeated +2.5 etc.
-function round(n: number): number {
-  return Math.round(n * 10) / 10;
-}
-
-function formatWeight(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between border-b border-border py-3">
+      <span className="text-[15px] font-bold text-text">{label}</span>
+      <div className="flex items-center gap-3">{children}</div>
+    </div>
+  );
 }

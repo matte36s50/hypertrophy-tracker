@@ -1,10 +1,19 @@
 import type { Metadata, Viewport } from "next";
+import { Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { DataProvider } from "@/components/DataProvider";
 import { BottomNav } from "@/components/BottomNav";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { RestTimerProvider } from "@/components/RestTimerProvider";
 import { RestTimerBar } from "@/components/RestTimerBar";
+
+// Ship font: Hanken Grotesk (weights 400–800), exposed as --font-sans.
+const hanken = Hanken_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Hypertrophy Tracker",
@@ -17,13 +26,13 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "Lift",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0f14",
+  themeColor: "#eef1ee",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -37,12 +46,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="min-h-dvh font-sans antialiased">
+    <html lang="en" className={hanken.variable}>
+      <body className="min-h-dvh bg-bg font-sans text-text antialiased">
         <DataProvider>
           <RestTimerProvider>
-            {/* Main scroll area. Bottom padding leaves room for the nav bar. */}
-            <main className="mx-auto w-full max-w-md px-4 pb-28 pt-4">
+            {/* Main scroll area. Top padding clears the status bar; bottom
+                padding leaves room for the rest-timer bar + nav. */}
+            <main className="mx-auto w-full max-w-md px-4 pb-32 pt-6">
               {children}
             </main>
             <RestTimerBar />

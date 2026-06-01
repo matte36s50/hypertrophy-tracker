@@ -1,7 +1,8 @@
 "use client";
 
-// A tiny dependency-free SVG line chart for one numeric series. It scales to
-// the data and draws points + a smooth-ish polyline. Built for small screens.
+// A tiny dependency-free SVG line chart for one numeric series. Draws an area
+// gradient under an accent/grey line, a dot per session, x-axis date labels,
+// and a label on the last point. Built for small phone screens.
 export interface ChartPoint {
   label: string;
   value: number;
@@ -10,75 +11,120 @@ export interface ChartPoint {
 export function LineChart({
   points,
   unit,
-  color = "#3b82f6",
+  color = "#10a05a",
 }: {
   points: ChartPoint[];
   unit?: string;
   color?: string;
 }) {
-  const width = 320;
-  const height = 120;
-  const padX = 8;
-  const padY = 16;
+  const W = 300;
+  const H = 132;
+  const padL = 34;
+  const padR = 44;
+  const padTop = 18;
+  const padBot = 26;
 
   if (points.length === 0) return null;
 
-  const values = points.map((p) => p.value);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
+  const vals = points.map((p) => p.value);
+  let min = Math.min(...vals);
+  let max = Math.max(...vals);
+  if (min === max) {
+    min -= 1;
+    max += 1;
+  }
+  const pad = (max - min) * 0.15;
+  min -= pad;
+  max += pad;
 
-  const innerW = width - padX * 2;
-  const innerH = height - padY * 2;
-
-  // X positions evenly spaced; a single point sits centred.
   const x = (i: number) =>
-    points.length === 1
-      ? width / 2
-      : padX + (i / (points.length - 1)) * innerW;
-  const y = (v: number) => padY + innerH - ((v - min) / span) * innerH;
+    padL +
+    (points.length === 1
+      ? (W - padL - padR) / 2
+      : (i / (points.length - 1)) * (W - padL - padR));
+  const y = (v: number) =>
+    padTop + (1 - (v - min) / (max - min)) * (H - padTop - padBot);
 
   const line = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(p.value).toFixed(1)}`)
+    .map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`)
     .join(" ");
-
-  // Area fill path (under the line).
-  const area =
-    points.length > 1
-      ? `${line} L ${x(points.length - 1)} ${padY + innerH} L ${x(0)} ${padY + innerH} Z`
-      : "";
+  const area = `${line} L${x(points.length - 1).toFixed(1)},${(H - padBot).toFixed(
+    1,
+  )} L${x(0).toFixed(1)},${(H - padBot).toFixed(1)} Z`;
+  const last = points[points.length - 1];
+  const gid = `g-${color.replace(/[^a-z0-9]/gi, "")}`;
 
   return (
-    <div>
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="w-full"
-        preserveAspectRatio="none"
-        role="img"
+    <svg
+      width="100%"
+      viewBox={`0 0 ${W} ${H}`}
+      style={{ display: "block", overflow: "visible" }}
+      role="img"
+    >
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.18} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      {/* baseline */}
+      <line
+        x1={padL}
+        y1={H - padBot}
+        x2={W - padR}
+        y2={H - padBot}
+        stroke="#e2e7e3"
+        strokeWidth={1}
+      />
+      <path d={area} fill={`url(#${gid})`} />
+      <path
+        d={line}
+        fill="none"
+        stroke={color}
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {points.map((p, i) => {
+        const isLast = i === points.length - 1;
+        const isFirst = i === 0;
+        const anchor = isLast ? "end" : isFirst ? "start" : "middle";
+        return (
+          <g key={i}>
+            <circle
+              cx={x(i)}
+              cy={y(p.value)}
+              r={isLast ? 4.5 : 3}
+              fill="#ffffff"
+              stroke={color}
+              strokeWidth={2.5}
+            />
+            <text
+              x={x(i)}
+              y={H - padBot + 16}
+              textAnchor={anchor}
+              fontSize="10"
+              fontWeight="600"
+              fill="#8b958e"
+              className="tabular-nums"
+            >
+              {p.label}
+            </text>
+          </g>
+        );
+      })}
+      <text
+        x={x(points.length - 1)}
+        y={y(last.value) - 9}
+        textAnchor="end"
+        fontSize="11.5"
+        fontWeight="800"
+        fill={color}
+        className="tabular-nums"
       >
-        {area && <path d={area} fill={color} opacity={0.12} />}
-        <path
-          d={line}
-          fill="none"
-          stroke={color}
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {points.map((p, i) => (
-          <circle key={i} cx={x(i)} cy={y(p.value)} r={3.5} fill={color} />
-        ))}
-      </svg>
-      <div className="mt-1 flex justify-between text-[10px] text-muted">
-        <span>
-          {points[0].label}
-          {unit ? ` · ${min}${unit}` : ""}
-        </span>
-        <span>
-          {points[points.length - 1].label}
-          {unit ? ` · ${max}${unit}` : ""}
-        </span>
-      </div>
-    </div>
+        {Math.round(last.value)}
+        {unit ? ` ${unit}` : ""}
+      </text>
+    </svg>
   );
 }

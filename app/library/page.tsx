@@ -5,7 +5,7 @@ import { useAppData } from "@/components/DataProvider";
 import { EXERCISES } from "@/lib/exercises";
 import { exercisesInPlan } from "@/lib/plan";
 import { MUSCLE_LABELS, MUSCLE_ORDER } from "@/lib/muscles";
-import { Card, PageHeader, Pill, TierBadge } from "@/components/ui";
+import { Card, PageHeader, Pill, SectionLabel, TierBadge } from "@/components/ui";
 import type { Exercise, MuscleGroup } from "@/lib/types";
 
 export default function LibraryPage() {
@@ -29,37 +29,41 @@ export default function LibraryPage() {
     <div>
       <PageHeader
         title="Exercise Library"
-        subtitle="Movements ranked S / A / B. To swap one into your plan, tap “Swap / edit” on the Today tab."
+        subtitle="Movements ranked S / A / B for hypertrophy. Tap “Swap” on the Today tab to slot one in."
       />
 
-      <div className="space-y-6">
+      <div className="flex flex-col gap-[22px]">
         {MUSCLE_ORDER.map((muscle) => {
           const list = byMuscle[muscle];
           if (!list || list.length === 0) return null;
           return (
             <section key={muscle}>
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
-                {MUSCLE_LABELS[muscle]}
-              </h2>
-              <div className="space-y-2">
+              <SectionLabel>{MUSCLE_LABELS[muscle]}</SectionLabel>
+              <div className="flex flex-col gap-3">
                 {list.map((ex) => (
                   <Card key={ex.id}>
-                    <div className="flex items-start gap-3">
-                      <TierBadge tier={ex.tier} />
+                    <div className="flex gap-3">
+                      <TierBadge tier={ex.tier} size={32} />
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-base font-semibold">{ex.name}</h3>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-base font-extrabold text-text">
+                            {ex.name}
+                          </h3>
                           {inPlan.has(ex.id) && (
-                            <span className="shrink-0 rounded-md bg-success/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-success">
+                            <span className="rounded-full bg-accent-soft px-[7px] py-0.5 text-[10.5px] font-extrabold uppercase tracking-[0.04em] text-accent-text">
                               In plan
                             </span>
                           )}
                         </div>
                         {ex.note && (
-                          <p className="mt-0.5 text-sm text-muted">{ex.note}</p>
+                          <p className="mt-1.5 text-[13.5px] font-medium leading-snug text-text-2">
+                            {ex.note}
+                          </p>
                         )}
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <Pill>{ex.equipment}</Pill>
+                        <div className="mt-2.5 flex flex-wrap gap-2">
+                          <Pill>
+                            <span className="capitalize">{ex.equipment}</span>
+                          </Pill>
                           <Pill>
                             {ex.repRange.min}–{ex.repRange.max} reps
                           </Pill>
