@@ -23,6 +23,11 @@ function migrate(data: AppData): AppData {
       })),
     };
   }
+  // v2 -> v3: introduced stamped workout sessions. Older data has no
+  // `sessions` array — start it empty so the app can begin recording.
+  if (!Array.isArray(data.sessions)) {
+    data = { ...data, sessions: [] };
+  }
   return { ...data, version: CURRENT_VERSION };
 }
 
