@@ -35,6 +35,8 @@ export interface Exercise {
   targetRIR: number;
   // Short coaching note in plain English.
   note?: string;
+  // Optional program tags, e.g. ["thor"] to mark plan-specific picks.
+  tags?: string[];
 }
 
 // The three training days in the default split.
@@ -62,6 +64,26 @@ export interface SetLog {
   loggedAt: string;
 }
 
+// A finished training session, stamped when the user taps "Finish workout".
+// Snapshots the session's headline numbers so history doesn't have to re-derive
+// them, and records whether every planned set was logged.
+export interface WorkoutSession {
+  id: string;
+  // Which split day this session belonged to.
+  dayKey: DayKey;
+  // Human-friendly label snapshot (e.g. "Push").
+  dayLabel: string;
+  // ISO timestamp of when the workout was closed out.
+  finishedAt: string;
+  // True if every planned set was logged; false for an early finish.
+  complete: boolean;
+  setsLogged: number;
+  // Total weight × reps across the session, in the user's unit.
+  volume: number;
+  // Number of distinct primary muscles trained.
+  musclesTrained: number;
+}
+
 // RP-style weekly volume landmarks (sets per muscle per week).
 export interface VolumeLandmarks {
   mev: number; // Minimum Effective Volume
@@ -78,4 +100,6 @@ export interface AppData {
   split: WorkoutDay[];
   // All logged sets.
   logs: SetLog[];
+  // Finished workout sessions, stamped when the user closes out a workout.
+  sessions: WorkoutSession[];
 }

@@ -10,5 +10,6 @@ export function makeDefaultData(): AppData {
     // Deep-copy the default split so user edits don't mutate the constant.
     split: JSON.parse(JSON.stringify(DEFAULT_SPLIT)),
     logs: [],
+    sessions: [],
   };
 }

@@ -5,16 +5,28 @@ import { useMemo, useState } from "react";
 import { useAppData } from "@/components/DataProvider";
 import { useRestTimer } from "@/components/RestTimerProvider";
 import { Card, RingProgress, formatWeight } from "@/components/ui";
-import { IconArrowUp, IconChevron, IconEdit, IconPlus, IconSwap } from "@/components/icons";
+import {
+  IconArrowUp,
+  IconCheck,
+  IconChevron,
+  IconEdit,
+  IconPlus,
+  IconSwap,
+  IconTrophy,
+} from "@/components/icons";
 import { SetLogSheet, type SetLogValues } from "@/components/SetLogSheet";
 import { SwapSheet } from "@/components/SwapSheet";
+import { WorkoutCompleteSheet } from "@/components/WorkoutCompleteSheet";
 import { getExercise } from "@/lib/exercises";
 import { setExerciseSets, swapExerciseInSplit } from "@/lib/plan";
+import { finishSession, finishedSessionForDay } from "@/lib/sessions";
 import { dayForWeekday } from "@/lib/split";
 import { MUSCLE_LABELS } from "@/lib/muscles";
 import {
   addSet,
   deleteSet,
+  fineWeightStep,
+  isSameDay,
   lastLogForExercise,
   todaysLogsForExercise,
   updateSet,
@@ -38,6 +50,8 @@ export default function TodayPage() {
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
   // Exercise id currently open in the swap/edit sheet.
   const [swapId, setSwapId] = useState<string | null>(null);
+  // Whether the workout-complete celebration sheet is showing.
+  const [showComplete, setShowComplete] = useState(false);
 
   const now = new Date();
   const weekday = now.getDay();
@@ -71,6 +85,21 @@ export default function TodayPage() {
     0,
   );
   const left = totalPlanned - totalLogged;
+  const sessionComplete = totalPlanned > 0 && totalLogged >= totalPlanned;
+
+  // Recap stats for the finish celebration: everything logged today, including
+  // any extra sets or swapped exercises.
+  const todaysLogs = data.logs.filter((l) =>
+    isSameDay(new Date(l.loggedAt), now),
+  );
+  const sessionVolume = todaysLogs.reduce((s, l) => s + l.weight * l.reps, 0);
+  const musclesTrained = new Set(
+    todaysLogs
+      .map((l) => getExercise(l.exerciseId)?.primaryMuscle)
+      .filter(Boolean),
+  ).size;
+  // A stamped session for today's day, if the workout's already been closed out.
+  const finishedSession = finishedSessionForDay(data, day.key, now);
 
   const dateLabel = now.toLocaleDateString(undefined, {
     weekday: "long",
@@ -122,6 +151,21 @@ export default function TodayPage() {
     setSheet(null);
   }
 
+  // Close out (or refresh) today's session, then show the celebration recap.
+  function handleFinish() {
+    update((d) =>
+      finishSession(d, {
+        dayKey: day.key,
+        dayLabel: day.label,
+        complete: sessionComplete,
+        setsLogged: todaysLogs.length,
+        volume: sessionVolume,
+        musclesTrained,
+      }),
+    );
+    setShowComplete(true);
+  }
+
   function handleSwap(toExerciseId: string) {
     if (!swapId) return;
     update((d) => swapExerciseInSplit(d, day.key, swapId, toExerciseId));
@@ -138,8 +182,9 @@ export default function TodayPage() {
   const swapSets =
     day.exercises.find((e) => e.exerciseId === swapId)?.sets ?? 3;
 
-  const statusLine =
-    totalPlanned > 0 && totalLogged >= totalPlanned
+  const statusLine = finishedSession
+    ? "Session finished ✓"
+    : sessionComplete
       ? "Session complete 🎉"
       : totalLogged === 0
         ? "Ready to train"
@@ -319,6 +364,35 @@ export default function TodayPage() {
         })}
       </div>
 
+      {/* Finish the workout: stamps a session record. Reads as a celebratory
+          complete when every set is in, an end-early option mid-session, or a
+          finished state once today's session has been closed out. */}
+      {(totalLogged > 0 || finishedSession) && (
+        <button
+          type="button"
+          onClick={handleFinish}
+          className={`mt-4 flex h-[54px] w-full items-center justify-center gap-2 rounded-btn text-base font-bold transition-transform active:scale-[0.99] ${
+            finishedSession
+              ? "border border-accent bg-accent-soft text-accent-text"
+              : sessionComplete
+                ? "border border-accent bg-accent text-accent-contrast shadow-card"
+                : "border border-border bg-surface text-text-2"
+          }`}
+        >
+          {finishedSession ? (
+            <>
+              <IconCheck s={18} /> Workout finished · view recap
+            </>
+          ) : sessionComplete ? (
+            <>
+              <IconTrophy s={19} /> Finish workout
+            </>
+          ) : (
+            "End workout early"
+          )}
+        </button>
+      )}
+
       {!ready && (
         <p className="mt-6 text-center text-xs text-text-3">Loading your data…</p>
       )}
@@ -329,6 +403,7 @@ export default function TodayPage() {
           setNumber={sheet.setNumber}
           unit={data.unit}
           step={weightStep(data.unit)}
+          fineStep={fineWeightStep(data.unit)}
           initial={sheet.initial}
           isEditing={Boolean(sheet.editingId)}
           onSave={handleSave}
@@ -344,6 +419,22 @@ export default function TodayPage() {
           onSwap={handleSwap}
           onSetsChange={handleSetsChange}
           onClose={() => setSwapId(null)}
+        />
+      )}
+
+      {showComplete && (
+        <WorkoutCompleteSheet
+          complete={sessionComplete}
+          dayLabel={day.label}
+          setsLogged={todaysLogs.length}
+          volume={sessionVolume}
+          unit={data.unit}
+          musclesTrained={musclesTrained}
+          onViewProgress={() => {
+            setShowComplete(false);
+            router.push("/progression");
+          }}
+          onClose={() => setShowComplete(false)}
         />
       )}
     </div>

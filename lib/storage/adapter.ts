@@ -10,4 +10,4 @@ export interface StorageAdapter {
   save(data: AppData): Promise<void>;
 }
 
-export const CURRENT_VERSION = 2;
+export const CURRENT_VERSION = 3;

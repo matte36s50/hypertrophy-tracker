@@ -14,6 +14,7 @@ export const DEFAULT_SPLIT: WorkoutDay[] = [
       { exerciseId: "cable-lateral-raise", sets: 3 },
       { exerciseId: "overhead-cable-ext", sets: 3 },
       { exerciseId: "cable-pushdown", sets: 3 },
+      { exerciseId: "skull-crushers", sets: 3 },
     ],
   },
   {
