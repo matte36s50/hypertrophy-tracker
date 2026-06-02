@@ -35,6 +35,8 @@ export interface Exercise {
   targetRIR: number;
   // Short coaching note in plain English.
   note?: string;
+  // Optional program tags, e.g. ["thor"] to mark plan-specific picks.
+  tags?: string[];
 }
 
 // The three training days in the default split.

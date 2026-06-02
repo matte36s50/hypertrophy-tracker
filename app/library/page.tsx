@@ -29,7 +29,7 @@ export default function LibraryPage() {
     <div>
       <PageHeader
         title="Exercise Library"
-        subtitle="Movements ranked S / A / B for hypertrophy. Tap “Swap” on the Today tab to slot one in."
+        subtitle="Movements ranked S / A / B for hypertrophy. Tap “Swap” on the Today tab to slot one in — ⚡ Thor picks come from the RP “Look Like Thor” plan."
       />
 
       <div className="flex flex-col gap-[22px]">
@@ -52,6 +52,11 @@ export default function LibraryPage() {
                           {inPlan.has(ex.id) && (
                             <span className="rounded-full bg-accent-soft px-[7px] py-0.5 text-[10.5px] font-extrabold uppercase tracking-[0.04em] text-accent-text">
                               In plan
+                            </span>
+                          )}
+                          {ex.tags?.includes("thor") && (
+                            <span className="rounded-full bg-warn/15 px-[7px] py-0.5 text-[10.5px] font-extrabold uppercase tracking-[0.04em] text-warn-text">
+                              ⚡ Thor
                             </span>
                           )}
                         </div>
