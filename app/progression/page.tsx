@@ -108,6 +108,48 @@ export default function ProgressionPage() {
 
       {/* --- Weekly volume vs RP landmarks --- */}
       <SectionLabel>Weekly volume · this week</SectionLabel>
+
+      {/* Plain-English primer on the RP volume landmarks the bars are graded
+          against, so the MEV / MAV / MRV ticks aren't just jargon. */}
+      <Card className="mb-3">
+        <h3 className="text-[14px] font-extrabold text-text">
+          What do MEV, MAV &amp; MRV mean?
+        </h3>
+        <p className="mt-1.5 text-[13px] font-medium leading-relaxed text-text-2">
+          These are weekly working-set targets per muscle, from Renaissance
+          Periodization.
+        </p>
+        <ul className="mt-2.5 flex flex-col gap-2">
+          <li className="flex gap-2.5">
+            <span className="mt-[5px] h-[7px] w-[7px] shrink-0 rounded-full bg-warn" />
+            <span className="text-[13px] leading-relaxed text-text-2">
+              <b className="font-bold text-text">MEV — Minimum Effective Volume.</b>{" "}
+              The fewest sets that still build muscle. Below this you&apos;re
+              maintaining, not growing.
+            </span>
+          </li>
+          <li className="flex gap-2.5">
+            <span className="mt-[5px] h-[7px] w-[7px] shrink-0 rounded-full bg-accent" />
+            <span className="text-[13px] leading-relaxed text-text-2">
+              <b className="font-bold text-text">MAV — Maximum Adaptive Volume.</b>{" "}
+              The productive sweet spot most weeks should land in.
+            </span>
+          </li>
+          <li className="flex gap-2.5">
+            <span className="mt-[5px] h-[7px] w-[7px] shrink-0 rounded-full bg-bad" />
+            <span className="text-[13px] leading-relaxed text-text-2">
+              <b className="font-bold text-text">MRV — Maximum Recoverable Volume.</b>{" "}
+              The most you can recover from. Past this, extra sets hurt more than
+              they help.
+            </span>
+          </li>
+        </ul>
+        <p className="mt-2.5 text-[12.5px] font-medium leading-relaxed text-text-3">
+          Aim to sit between MEV and MAV, then creep toward MRV across a training
+          block.
+        </p>
+      </Card>
+
       <div className="flex flex-col gap-3">
         {MUSCLE_ORDER.map((muscle) => {
           const sets = volumeMap[muscle] ?? 0;
