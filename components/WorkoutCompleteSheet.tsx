@@ -4,6 +4,19 @@ import { Sheet, SheetButton } from "@/components/Sheet";
 import { formatWeight } from "@/components/ui";
 import { IconTrophy } from "@/components/icons";
 
+// The Strava share affordance, owned by the parent so this sheet stays
+// presentational.
+export interface StravaShareState {
+  // null = integration not configured (hide the button entirely).
+  connected: boolean | null;
+  phase: "idle" | "sharing" | "done" | "error";
+  error?: string;
+  activityId?: number;
+  // Connect (when not linked) or upload the workout (when linked).
+  onConnect: () => void;
+  onShare: () => void;
+}
+
 interface WorkoutCompleteSheetProps {
   // True when every planned set was logged; false for an early finish.
   complete: boolean;
@@ -12,6 +25,7 @@ interface WorkoutCompleteSheetProps {
   volume: number;
   unit: "kg" | "lb";
   musclesTrained: number;
+  strava?: StravaShareState;
   onViewProgress: () => void;
   onClose: () => void;
 }
@@ -28,6 +42,7 @@ export function WorkoutCompleteSheet({
   volume,
   unit,
   musclesTrained,
+  strava,
   onViewProgress,
   onClose,
 }: WorkoutCompleteSheetProps) {
@@ -81,6 +96,8 @@ export function WorkoutCompleteSheet({
         </div>
       </div>
 
+      {strava && strava.connected !== null && <StravaShare strava={strava} />}
+
       <div className="mt-6 flex flex-col gap-2.5">
         <SheetButton onClick={onViewProgress}>View progress</SheetButton>
         <SheetButton variant="ghost" onClick={onClose}>
@@ -88,6 +105,59 @@ export function WorkoutCompleteSheet({
         </SheetButton>
       </div>
     </Sheet>
+  );
+}
+
+// "Share to Strava" affordance: connect first if needed, otherwise upload the
+// finished workout as a structured strength activity.
+function StravaShare({ strava }: { strava: StravaShareState }) {
+  const { connected, phase } = strava;
+
+  if (phase === "done") {
+    return (
+      <div className="mt-5 flex items-center justify-center gap-2 rounded-input bg-accent-soft px-3 py-3 text-[14px] font-bold text-accent-text">
+        Shared to Strava ✓
+        {strava.activityId != null && (
+          <a
+            href={`https://www.strava.com/activities/${strava.activityId}`}
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
+            View
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  const label = !connected
+    ? "Connect Strava"
+    : phase === "sharing"
+      ? "Sharing…"
+      : "Share to Strava";
+
+  return (
+    <div className="mt-5">
+      <button
+        type="button"
+        disabled={phase === "sharing"}
+        onClick={connected ? strava.onShare : strava.onConnect}
+        className="flex h-[50px] w-full items-center justify-center gap-2 rounded-btn border border-transparent bg-[#fc4c02] text-base font-bold text-white transition-transform active:scale-[0.99] disabled:opacity-60"
+      >
+        {label}
+      </button>
+      {phase === "error" && strava.error && (
+        <p className="mt-2 text-center text-[12.5px] font-medium text-bad-text">
+          {strava.error}
+        </p>
+      )}
+      {!connected && (
+        <p className="mt-2 text-center text-[12px] font-medium text-text-3">
+          Posts this workout — exercises, sets &amp; reps — to your Strava feed.
+        </p>
+      )}
+    </div>
   );
 }
 

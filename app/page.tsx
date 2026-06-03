@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAppData } from "@/components/DataProvider";
 import { useRestTimer } from "@/components/RestTimerProvider";
 import { Card, RingProgress, formatWeight } from "@/components/ui";
@@ -33,6 +33,12 @@ import {
   weightStep,
 } from "@/lib/logs";
 import { analyzeExercise } from "@/lib/progression";
+import {
+  buildStravaWorkout,
+  connectStrava,
+  getStravaStatus,
+  shareWorkoutToStrava,
+} from "@/lib/strava";
 import type { MuscleGroup, SetLog } from "@/lib/types";
 
 // Describes which set the logging sheet is currently editing/adding.
@@ -52,6 +58,29 @@ export default function TodayPage() {
   const [swapId, setSwapId] = useState<string | null>(null);
   // Whether the workout-complete celebration sheet is showing.
   const [showComplete, setShowComplete] = useState(false);
+  // Strava link + share state. `null` connection = integration not configured.
+  const [stravaConnected, setStravaConnected] = useState<boolean | null>(null);
+  const [sharePhase, setSharePhase] = useState<
+    "idle" | "sharing" | "done" | "error"
+  >("idle");
+  const [shareError, setShareError] = useState<string | undefined>();
+  const [shareActivityId, setShareActivityId] = useState<number | undefined>();
+
+  // Check the Strava link once, and tidy up the ?strava=… param left by the
+  // OAuth round-trip.
+  useEffect(() => {
+    getStravaStatus().then((s) =>
+      setStravaConnected(s.configured ? s.connected : null),
+    );
+    if (
+      typeof window !== "undefined" &&
+      window.location.search.includes("strava=")
+    ) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("strava");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, []);
 
   const now = new Date();
   const weekday = now.getDay();
@@ -163,7 +192,31 @@ export default function TodayPage() {
         musclesTrained,
       }),
     );
+    // Fresh share state for this celebration.
+    setSharePhase("idle");
+    setShareError(undefined);
+    setShareActivityId(undefined);
     setShowComplete(true);
+  }
+
+  // Push today's logged sets to Strava as a structured strength activity.
+  async function handleShareToStrava() {
+    const payload = buildStravaWorkout(data, day.key, day.label, now);
+    if (!payload) {
+      setSharePhase("error");
+      setShareError("No sets logged today.");
+      return;
+    }
+    setSharePhase("sharing");
+    setShareError(undefined);
+    const result = await shareWorkoutToStrava(payload);
+    if (result.ok) {
+      setSharePhase("done");
+      setShareActivityId(result.activityId);
+    } else {
+      setSharePhase("error");
+      setShareError(result.error);
+    }
   }
 
   function handleSwap(toExerciseId: string) {
@@ -430,6 +483,14 @@ export default function TodayPage() {
           volume={sessionVolume}
           unit={data.unit}
           musclesTrained={musclesTrained}
+          strava={{
+            connected: stravaConnected,
+            phase: sharePhase,
+            error: shareError,
+            activityId: shareActivityId,
+            onConnect: connectStrava,
+            onShare: handleShareToStrava,
+          }}
           onViewProgress={() => {
             setShowComplete(false);
             router.push("/progression");

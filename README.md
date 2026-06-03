@@ -27,6 +27,33 @@ Nippard-style exercise tiers.
 - **Polish:** auto-starting rest timer (with ±30s / skip), and a plan editor
   (`/plan`) to rename days, reorder, add/remove exercises and adjust set counts.
 - **Phase 5 (optional):** cloud sync + login.
+- **Strava sharing (optional):** push a finished workout to Strava as a
+  structured **Weight Training** activity — exercises, sets, reps and weight —
+  using Strava's strength-training JSON upload (launched May 2026). See below.
+
+## Strava integration (optional)
+
+When configured, the workout-complete screen shows a **Share to Strava** button
+that uploads the day's logged sets as a structured strength activity, so they
+appear on Strava with real movement names and auto-populated muscle maps.
+
+It's off until you provide credentials, so the app keeps working with no backend
+by default. To enable it:
+
+1. Create an API application at
+   [strava.com/settings/api](https://www.strava.com/settings/api). Set the
+   **Authorization Callback Domain** to your deploy host (e.g.
+   `your-app.vercel.app`, or `localhost` for local dev).
+2. Copy `.env.example` to `.env.local` and fill in `STRAVA_CLIENT_ID` and
+   `STRAVA_CLIENT_SECRET` (on Vercel, add these as Environment Variables).
+3. OAuth is brokered by `app/api/strava/*` route handlers — the client secret
+   stays server-side and the Strava refresh token is kept in an httpOnly cookie,
+   so no database is needed.
+
+**Exercise mapping:** `lib/strava.ts` translates each exercise id to a Strava
+`exercise_type`. Those enum values are best-effort and easy to extend/correct
+against the official [upload docs](https://developers.strava.com/docs/uploads/);
+an unmapped exercise still uploads its reps/weight, just without the muscle map.
 
 ## Run locally
 
