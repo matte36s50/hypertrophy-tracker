@@ -2,7 +2,8 @@ import type { Exercise } from "./types";
 
 // The exercise library. Tiers (S/A/B) follow a Jeff Nippard-style ranking of
 // stimulus quality / efficiency for hypertrophy. This list is the master
-// catalogue the app suggests from and lets you swap between.
+// catalogue the app suggests from and lets you swap between. Every exercise
+// carries a short plain-English form cue in `note`.
 export const EXERCISES: Exercise[] = [
   // ---- CHEST ----
   {
@@ -14,7 +15,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "dumbbell",
     repRange: { min: 8, max: 12 },
     targetRIR: 1,
-    note: "Great upper-chest stretch and stability. A staple pressing movement.",
+    note: "Bench at ~30°. Lower under control for a deep stretch at the bottom, then press without clashing the dumbbells at the top.",
   },
   {
     id: "machine-chest-press",
@@ -25,7 +26,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "machine",
     repRange: { min: 8, max: 12 },
     targetRIR: 1,
-    note: "Stable, easy to push close to failure safely.",
+    note: "Set the seat so the handles sit at mid-chest; stable, so it's easy to push close to failure safely.",
   },
   {
     id: "barbell-bench-press",
@@ -36,7 +37,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "barbell",
     repRange: { min: 6, max: 10 },
     targetRIR: 2,
-    note: "Heavy compound. Strong but a bit harder on the shoulders.",
+    note: "Tuck the elbows ~45°, touch the lower chest, and keep the shoulder blades pinned back and down.",
   },
   {
     id: "pec-deck",
@@ -46,7 +47,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "machine",
     repRange: { min: 12, max: 20 },
     targetRIR: 1,
-    note: "Isolation with a great stretch on the chest.",
+    note: "Keep a soft elbow bend fixed throughout and squeeze the hands together; let the chest stretch fully on the way out.",
   },
 
   // ---- SHOULDERS ----
@@ -59,7 +60,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "dumbbell",
     repRange: { min: 8, max: 12 },
     targetRIR: 1,
-    note: "Main front-delt builder.",
+    note: "Press just short of locking out and lower until the elbows drop below shoulder level; avoid arching the lower back.",
   },
   {
     id: "cable-lateral-raise",
@@ -69,7 +70,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "cable",
     repRange: { min: 12, max: 20 },
     targetRIR: 0,
-    note: "Constant tension on side delts — width maker.",
+    note: "Lead with the elbow, raise to shoulder height, and resist the negative — constant tension makes this a width builder.",
   },
   {
     id: "db-lateral-raise",
@@ -79,7 +80,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "dumbbell",
     repRange: { min: 12, max: 20 },
     targetRIR: 0,
-    note: "Classic side-delt isolation.",
+    note: "Slight forward lean, raise out to the sides to shoulder height, and don't swing or shrug the traps up.",
   },
   {
     id: "machine-lateral-raise",
@@ -89,7 +90,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "machine",
     repRange: { min: 12, max: 20 },
     targetRIR: 0,
-    note: "Thor plan: capped, wide delts — trained 3×/week. Stable so you can chase the burn.",
+    note: "Thor plan: capped, wide delts, trained 3×/week. Push the pads with the elbows to shoulder height and chase a controlled burn.",
     tags: ["thor"],
   },
   {
@@ -100,7 +101,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "machine",
     repRange: { min: 12, max: 20 },
     targetRIR: 0,
-    note: "Best rear-delt isolation for most people.",
+    note: "Lead with the elbows out and back, stop level with the torso, and keep the chest pinned to the pad.",
   },
   {
     id: "cable-rear-delt-fly",
@@ -110,6 +111,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "cable",
     repRange: { min: 12, max: 20 },
     targetRIR: 0,
+    note: "Cross the cables, lead with the elbows out to the sides at shoulder height — think pulling apart, not lifting.",
   },
 
   // ---- TRICEPS ----
@@ -121,7 +123,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "cable",
     repRange: { min: 10, max: 15 },
     targetRIR: 1,
-    note: "Reliable triceps pump with constant tension.",
+    note: "Pin the elbows to your sides and extend fully; only the forearms move.",
   },
   {
     id: "overhead-cable-ext",
@@ -131,7 +133,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "cable",
     repRange: { min: 10, max: 15 },
     targetRIR: 1,
-    note: "Stretches the long head of the triceps.",
+    note: "Lean away from the stack so the upper arms stay overhead, and let the long head stretch deeply before extending.",
   },
   {
     id: "skull-crushers",
@@ -141,7 +143,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "barbell",
     repRange: { min: 8, max: 12 },
     targetRIR: 2,
-    note: "Lying triceps extension — loads the long head hard.",
+    note: "Keep the upper arms angled slightly back and lower toward the forehead/behind the head to load the long head.",
   },
   {
     id: "dips",
@@ -152,6 +154,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "bodyweight",
     repRange: { min: 8, max: 15 },
     targetRIR: 2,
+    note: "Stay upright with elbows tucked for triceps (lean forward for chest); lower until the upper arms reach parallel.",
   },
   {
     id: "close-grip-bench-press",
@@ -162,7 +165,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "barbell",
     repRange: { min: 6, max: 10 },
     targetRIR: 2,
-    note: "Thor plan: heavy compound for thick arms. Pair with a pushdown for volume.",
+    note: "Thor plan: heavy compound for thick arms. Grip about shoulder-width, tuck the elbows, and touch the lower chest. Pair with a pushdown for volume.",
     tags: ["thor"],
   },
 
@@ -176,7 +179,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "cable",
     repRange: { min: 8, max: 12 },
     targetRIR: 1,
-    note: "Builds lat width with a controllable load.",
+    note: "Drive the elbows down toward the hips and bring the bar to the upper chest; let the lats stretch fully at the top.",
   },
   {
     id: "chest-supported-row",
@@ -187,7 +190,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "machine",
     repRange: { min: 8, max: 12 },
     targetRIR: 1,
-    note: "Thickness builder with no lower-back strain.",
+    note: "Keep the chest on the pad, row to the lower ribs by driving the elbows back, and squeeze the shoulder blades together.",
   },
   {
     id: "pull-ups",
@@ -198,6 +201,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "bodyweight",
     repRange: { min: 6, max: 12 },
     targetRIR: 2,
+    note: "Start from a full dead hang, drive the elbows down and back, and pull the chest toward the bar without kipping.",
   },
   {
     id: "straight-arm-pulldown",
@@ -207,7 +211,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "cable",
     repRange: { min: 12, max: 20 },
     targetRIR: 1,
-    note: "Thor plan: lat-width isolation, no biceps fatigue. A core 3×/week movement.",
+    note: "Thor plan: lat-width isolation with no biceps fatigue. Keep the arms nearly straight and sweep the bar to the thighs using the lats.",
     tags: ["thor"],
   },
   {
@@ -219,7 +223,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "dumbbell",
     repRange: { min: 10, max: 15 },
     targetRIR: 1,
-    note: "Thor plan: big lat stretch for that V-taper sweep.",
+    note: "Thor plan: big lat stretch for the V-taper. Lower the dumbbell back over the head with a slight elbow bend, feeling the stretch, then pull it over the chest.",
     tags: ["thor"],
   },
   {
@@ -231,6 +235,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "barbell",
     repRange: { min: 6, max: 10 },
     targetRIR: 2,
+    note: "Hinge to about 45°, keep the lower back flat and braced, and row to the lower ribs with the elbows tucked.",
   },
 
   // ---- BICEPS ----
@@ -242,7 +247,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "dumbbell",
     repRange: { min: 8, max: 12 },
     targetRIR: 1,
-    note: "Stretched-position curl — excellent biceps growth.",
+    note: "Let the arms hang behind the torso on an incline bench for a deep stretch, then curl without the elbows drifting forward.",
   },
   {
     id: "cable-curl",
@@ -252,6 +257,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "cable",
     repRange: { min: 10, max: 15 },
     targetRIR: 1,
+    note: "Pin the elbows at your sides, curl without swinging, and control the lowering through a full stretch — constant tension throughout.",
   },
   {
     id: "ez-bar-curl",
@@ -261,6 +267,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "barbell",
     repRange: { min: 8, max: 12 },
     targetRIR: 1,
+    note: "Keep the elbows still and tucked, squeeze at the top, and resist the negative — no torso rocking.",
   },
   {
     id: "hammer-curl",
@@ -270,7 +277,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "dumbbell",
     repRange: { min: 8, max: 12 },
     targetRIR: 1,
-    note: "Thor plan: builds arm thickness by hitting the brachialis and forearms.",
+    note: "Thor plan: builds arm thickness via the brachialis and forearms. Neutral (palms-facing) grip, elbows fixed at your sides, no swing.",
     tags: ["thor"],
   },
   {
@@ -281,7 +288,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "machine",
     repRange: { min: 10, max: 15 },
     targetRIR: 1,
-    note: "Thor plan: stretched-position curl with no swinging — pure biceps.",
+    note: "Thor plan: stretched-position curl with no swinging. Keep the upper arms flat on the pad and control the bottom stretch — don't bounce out of it.",
     tags: ["thor"],
   },
 
@@ -295,7 +302,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "machine",
     repRange: { min: 8, max: 12 },
     targetRIR: 1,
-    note: "Loads the quads hard with a stable path.",
+    note: "Feet lower/closer for quad bias; descend deep with control and drive through the whole foot on a stable path.",
   },
   {
     id: "leg-press",
@@ -306,6 +313,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "machine",
     repRange: { min: 10, max: 15 },
     targetRIR: 1,
+    note: "Feet mid-platform; lower until the knees reach ~90° (or deeper for range) without the lower back rounding off the pad.",
   },
   {
     id: "barbell-squat",
@@ -316,6 +324,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "barbell",
     repRange: { min: 6, max: 10 },
     targetRIR: 2,
+    note: "Brace the core hard, sit hips and knees down together to at least parallel, with the knees tracking over the toes.",
   },
   {
     id: "leg-extension",
@@ -325,7 +334,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "machine",
     repRange: { min: 12, max: 20 },
     targetRIR: 0,
-    note: "Pure quad isolation, great for adding volume.",
+    note: "Align the knee with the machine's pivot, extend to a hard contraction at the top, and lower slowly.",
   },
 
   // ---- HAMSTRINGS ----
@@ -337,7 +346,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "machine",
     repRange: { min: 10, max: 15 },
     targetRIR: 1,
-    note: "Trains hamstrings in a stretched position — top tier.",
+    note: "Trains the hamstrings in a stretched position (top tier). Curl fully under the seat and control the return.",
   },
   {
     id: "romanian-deadlift",
@@ -348,7 +357,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "barbell",
     repRange: { min: 8, max: 12 },
     targetRIR: 2,
-    note: "Big hamstring & glute stretch under load.",
+    note: "Push the hips back with soft knees, keep the bar close and the back flat, and stop when you feel the hamstring stretch.",
   },
   {
     id: "lying-leg-curl",
@@ -358,6 +367,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "machine",
     repRange: { min: 10, max: 15 },
     targetRIR: 1,
+    note: "Keep the hips pressed into the pad, curl all the way up, and lower under control through the full stretch.",
   },
 
   // ---- GLUTES ----
@@ -370,7 +380,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "barbell",
     repRange: { min: 8, max: 12 },
     targetRIR: 1,
-    note: "Peak-contraction glute builder.",
+    note: "Upper back on the bench, chin tucked; drive the hips to full lockout and squeeze the glutes hard at the top.",
   },
   {
     id: "cable-kickback",
@@ -380,6 +390,7 @@ export const EXERCISES: Exercise[] = [
     equipment: "cable",
     repRange: { min: 12, max: 20 },
     targetRIR: 0,
+    note: "Hinge slightly forward and extend the hip by squeezing the glute; don't arch the lower back to finish the rep.",
   },
 
   // ---- CALVES ----
