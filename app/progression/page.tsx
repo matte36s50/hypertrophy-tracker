@@ -13,15 +13,20 @@ import type { VolumeStatus } from "@/lib/volume";
 
 const STATUS_TEXT: Record<VolumeStatus, string> = {
   "under-mev": "Below MEV — add a set or two next week",
-  "in-range": "Productive range — keep progressing",
+  "in-range": "MEV–MAV — productive, keep adding sets",
+  "above-mav": "Above MAV — strong stimulus, progress slowly toward MRV",
   "near-mrv": "Near MRV — hold volume, watch recovery",
   "over-mrv": "Over MRV — consider a lighter week",
 };
 
 // Status dot + text colour, and the volume-bar fill colour.
 function statusStyle(status: VolumeStatus) {
-  if (status === "in-range")
+  if (status === "above-mav")
+    // Peak adaptive zone — the target. Solid green dot + green text.
     return { dot: "bg-good", text: "text-accent-text", fill: "bg-accent" };
+  if (status === "in-range")
+    // Building toward the sweet spot — productive but below MAV.
+    return { dot: "bg-accent", text: "text-text-2", fill: "bg-accent" };
   if (status === "over-mrv")
     return { dot: "bg-bad", text: "text-bad-text", fill: "bg-bad" };
   if (status === "under-mev")
