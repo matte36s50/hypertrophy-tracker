@@ -3,7 +3,13 @@ import { getExercise } from "./exercises";
 import { VOLUME_LANDMARKS } from "./muscles";
 
 // Status of a muscle group's weekly volume relative to RP landmarks.
-export type VolumeStatus = "under-mev" | "in-range" | "near-mrv" | "over-mrv";
+// "in-range" = MEV→MAV (building); "above-mav" = MAV→MRV (peak adaptive zone).
+export type VolumeStatus =
+  | "under-mev"
+  | "in-range"
+  | "above-mav"
+  | "near-mrv"
+  | "over-mrv";
 
 export interface MuscleVolume {
   muscle: MuscleGroup;
@@ -40,6 +46,7 @@ export function statusForSets(muscle: MuscleGroup, sets: number): VolumeStatus {
   if (sets < lm.mev) return "under-mev";
   if (sets > lm.mrv) return "over-mrv";
   if (sets >= lm.mrv - 2) return "near-mrv";
+  if (sets >= lm.mav) return "above-mav";
   return "in-range";
 }
 

@@ -31,7 +31,10 @@ export const VOLUME_LANDMARKS: Record<MuscleGroup, VolumeLandmarks> = {
   quads: { mev: 8, mav: 14, mrv: 20 },
   hamstrings: { mev: 6, mav: 12, mrv: 18 },
   glutes: { mev: 4, mav: 10, mrv: 16 },
-  calves: { mev: 8, mav: 14, mrv: 20 },
+  // Calves recover quickly and are very commonly under-stimulated, so current
+  // practice leans toward the higher end of the RP range — push MAV/MRV up a
+  // touch and train them frequently (they tolerate 2–3×/week well).
+  calves: { mev: 8, mav: 16, mrv: 22 },
 };
 
 // All muscle groups in a sensible display order.
