@@ -7,6 +7,7 @@ import { IconArrowUp, IconFlame } from "@/components/icons";
 import { MUSCLE_LABELS, MUSCLE_ORDER, VOLUME_LANDMARKS } from "@/lib/muscles";
 import { statusForSets, weeklyVolume } from "@/lib/volume";
 import { progressionNudges } from "@/lib/progression";
+import { deloadAdvice } from "@/lib/deload";
 import { getExercise } from "@/lib/exercises";
 import type { MuscleGroup } from "@/lib/types";
 import type { VolumeStatus } from "@/lib/volume";
@@ -45,6 +46,7 @@ export default function ProgressionPage() {
   }, [data]);
 
   const nudges = useMemo(() => progressionNudges(data), [data]);
+  const deload = useMemo(() => deloadAdvice(data), [data]);
   const hasLogs = data.logs.length > 0;
 
   return (
@@ -53,6 +55,36 @@ export default function ProgressionPage() {
         title="Progression"
         subtitle="When to add weight, and how your weekly volume stacks up."
       />
+
+      {/* --- Deload recommendation (fatigue management) --- */}
+      {deload.recommended && (
+        <Card className="mb-[22px] border-warn bg-warn/10">
+          <div className="flex gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-input bg-warn text-accent-contrast">
+              <IconFlame s={18} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base font-extrabold text-text">
+                Deload recommended
+              </h3>
+              <p className="mt-1 text-[13.5px] font-medium leading-relaxed text-warn-text">
+                {deload.reason}
+              </p>
+              <p className="mt-1.5 text-[13px] font-medium leading-relaxed text-text-2">
+                {deload.guidance}
+              </p>
+              {deload.fatiguedMuscles.length > 0 && (
+                <p className="mt-1.5 text-[12.5px] font-semibold text-text-3">
+                  Most fatigued:{" "}
+                  {deload.fatiguedMuscles
+                    .map((m) => MUSCLE_LABELS[m])
+                    .join(", ")}
+                </p>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* --- Add-weight nudges (double progression) --- */}
       <SectionLabel>Ready to progress</SectionLabel>
