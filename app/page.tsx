@@ -111,6 +111,20 @@ export default function TodayPage() {
   // last logged values so you only nudge what changed.
   function defaultsFor(exerciseId: string): SetLogValues {
     const ex = getExercise(exerciseId)!;
+    // If a weight bump is recommended and nothing's logged yet today, prefill
+    // the suggested weight so the nudge carries straight into the logger.
+    const advice = analyzeExercise(data, exerciseId);
+    if (
+      advice.status === "add-weight" &&
+      advice.suggestedWeight != null &&
+      todaysLogsForExercise(data, exerciseId).length === 0
+    ) {
+      return {
+        weight: advice.suggestedWeight,
+        reps: ex.repRange.min,
+        rir: ex.targetRIR,
+      };
+    }
     const last = lastLogForExercise(data, exerciseId);
     if (last) return { weight: last.weight, reps: last.reps, rir: last.rir };
     return {
@@ -185,10 +199,12 @@ export default function TodayPage() {
   const statusLine = finishedSession
     ? "Session finished ✓"
     : sessionComplete
-      ? "Session complete 🎉"
+      ? "Session complete"
       : totalLogged === 0
         ? "Ready to train"
         : "In progress";
+  // The complete state gets a check badge + accent text on the status line.
+  const statusComplete = sessionComplete && !finishedSession;
 
   return (
     <div>
@@ -198,7 +214,7 @@ export default function TodayPage() {
           <div className="text-[13px] font-bold uppercase tracking-[0.04em] text-accent-text">
             {isToday ? "Today" : "Next up"}
           </div>
-          <h1 className="mt-0.5 whitespace-nowrap text-[30px] font-extrabold tracking-[-0.02em]">
+          <h1 className="mt-0.5 break-words text-[30px] font-extrabold tracking-[-0.02em]">
             {day.label} Day
           </h1>
           <p className="mt-1 text-sm font-medium text-text-2">{dateLabel}</p>
@@ -217,7 +233,18 @@ export default function TodayPage() {
         <div className="flex items-center gap-4">
           <RingProgress done={totalLogged} total={totalPlanned} />
           <div className="min-w-0 flex-1">
-            <div className="text-[15px] font-bold text-text">{statusLine}</div>
+            <div
+              className={`flex items-center gap-1.5 text-[15px] font-bold ${
+                statusComplete ? "text-accent-text" : "text-text"
+              }`}
+            >
+              {statusComplete && (
+                <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-accent text-accent-contrast">
+                  <IconCheck s={11} />
+                </span>
+              )}
+              <span>{statusLine}</span>
+            </div>
             <div className="mt-0.5 text-[13.5px] font-medium text-text-2">
               {left > 0
                 ? `${left} sets left across ${day.exercises.length} exercises`
@@ -256,6 +283,8 @@ export default function TodayPage() {
           const ready =
             advice.status === "add-weight" && advice.suggestedWeight != null;
           const complete = logs.length >= item.sets;
+          // Most recent log (any day) — shown on empty rows as "what to beat".
+          const last = lastLogForExercise(data, item.exerciseId);
 
           return (
             <Card key={item.exerciseId}>
@@ -271,10 +300,15 @@ export default function TodayPage() {
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2">
                   <span
-                    className={`text-[13.5px] font-extrabold tabular-nums ${
+                    className={`inline-flex items-center gap-[5px] text-[13.5px] font-extrabold tabular-nums ${
                       complete ? "text-accent-text" : "text-text-2"
                     }`}
                   >
+                    {complete && (
+                      <span className="flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-full bg-accent text-accent-contrast">
+                        <IconCheck s={10} />
+                      </span>
+                    )}
                     {logs.length}/{item.sets}
                   </span>
                   <button
@@ -287,19 +321,36 @@ export default function TodayPage() {
                 </div>
               </div>
 
-              {ready && (
-                <div className="mt-3 flex items-center gap-2.5 rounded-input bg-accent-soft px-3 py-2.5">
+              {ready && !complete && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSheet({
+                      exerciseId: item.exerciseId,
+                      setNumber: logs.length + 1,
+                      initial: {
+                        weight: advice.suggestedWeight!,
+                        reps: ex.repRange.min,
+                        rir: ex.targetRIR,
+                      },
+                    })
+                  }
+                  className="press mt-3 flex w-full items-center gap-2.5 rounded-input bg-accent-soft px-3 py-2.5 text-left"
+                >
                   <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-accent text-accent-contrast">
                     <IconArrowUp s={15} />
                   </span>
-                  <span className="text-[13.5px] font-medium text-accent-text">
-                    Add weight — try{" "}
+                  <span className="flex-1 text-[13.5px] font-medium text-accent-text">
+                    Add weight — log{" "}
                     <b className="font-bold">
                       {formatWeight(advice.suggestedWeight!)} {data.unit}
                     </b>{" "}
                     today
                   </span>
-                </div>
+                  <span className="flex shrink-0 text-accent-text">
+                    <IconChevron s={15} />
+                  </span>
+                </button>
               )}
 
               <div className="mt-3 flex flex-col gap-2">
@@ -312,7 +363,7 @@ export default function TodayPage() {
                         key={log.id}
                         type="button"
                         onClick={() => openEdit(log, setNumber)}
-                        className="flex w-full items-center justify-between rounded-row border border-border bg-surface-2 px-3.5 py-3 text-left active:bg-surface-3"
+                        className="press flex w-full items-center justify-between rounded-row border border-border bg-surface-2 px-3.5 py-3 text-left"
                       >
                         <span className="flex items-baseline gap-3">
                           <span className="w-[34px] text-[12.5px] font-bold text-text-3">
@@ -338,13 +389,23 @@ export default function TodayPage() {
                       key={`empty-${i}`}
                       type="button"
                       onClick={() => openAdd(item.exerciseId, setNumber)}
-                      className="flex w-full items-center justify-between rounded-row border-[1.5px] border-dashed border-border-strong px-3.5 py-3 text-left active:bg-surface-2"
+                      className="press flex w-full items-center gap-2.5 rounded-row border-[1.5px] border-dashed border-border-strong px-3.5 py-3 text-left"
                     >
-                      <span className="text-[13.5px] font-bold text-text-2">
+                      <span className="shrink-0 text-[13.5px] font-bold text-text-2">
                         Set {setNumber}
                       </span>
-                      <span className="flex items-center gap-1.5 text-[13px] font-bold text-accent-text">
-                        Tap to log <IconChevron s={14} />
+                      {last && (
+                        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold tabular-nums text-text-3">
+                          Last {formatWeight(last.weight)} {data.unit} ×{" "}
+                          {last.reps}
+                        </span>
+                      )}
+                      <span
+                        className={`flex shrink-0 items-center gap-1.5 text-[13px] font-bold text-accent-text ${
+                          last ? "" : "ml-auto"
+                        }`}
+                      >
+                        Log <IconChevron s={14} />
                       </span>
                     </button>
                   );

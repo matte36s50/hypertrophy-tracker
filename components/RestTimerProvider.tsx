@@ -15,6 +15,9 @@ export const DEFAULT_REST_SECONDS = 150;
 interface RestTimerValue {
   // Seconds remaining (0 when idle or finished).
   remaining: number;
+  // The full rest length for this session — drives the countdown track.
+  // Raised (never lowered) when +30 pushes remaining past the original total.
+  total: number;
   active: boolean;
   finished: boolean;
   start: (seconds?: number) => void;
@@ -27,6 +30,7 @@ const RestTimerContext = createContext<RestTimerValue | null>(null);
 export function RestTimerProvider({ children }: { children: React.ReactNode }) {
   const [endAt, setEndAt] = useState<number | null>(null);
   const [remaining, setRemaining] = useState(0);
+  const [total, setTotal] = useState(DEFAULT_REST_SECONDS);
   const [finished, setFinished] = useState(false);
   const audioRef = useRef<AudioContext | null>(null);
 
@@ -69,6 +73,7 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
       setFinished(false);
       setEndAt(Date.now() + seconds * 1000);
       setRemaining(seconds);
+      setTotal(seconds);
     },
     [ensureAudio],
   );
@@ -78,7 +83,10 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
       setEndAt((prev) => {
         const base = prev ?? Date.now();
         const next = Math.max(Date.now(), base + delta * 1000);
-        setRemaining(Math.round((next - Date.now()) / 1000));
+        const left = Math.round((next - Date.now()) / 1000);
+        setRemaining(left);
+        // +30 past the original rest grows the track; −30 never shrinks it.
+        setTotal((t) => Math.max(t, left));
         return next;
       });
       setFinished(false);
@@ -121,6 +129,7 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
     <RestTimerContext.Provider
       value={{
         remaining,
+        total,
         active: endAt !== null,
         finished,
         start,

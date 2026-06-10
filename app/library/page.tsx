@@ -29,8 +29,26 @@ export default function LibraryPage() {
     <div>
       <PageHeader
         title="Exercise Library"
-        subtitle="Movements ranked S / A / B for hypertrophy. Tap “Swap” on the Today tab to slot one in — ⚡ Thor picks come from the RP “Look Like Thor” plan."
+        subtitle="Movements ranked by hypertrophy tier. Tap “Swap” on the Today tab to slot one in."
       />
+
+      {/* Tier legend — what S / A / B mean at a glance. */}
+      <div className="-mt-1 mb-5 flex flex-wrap items-center gap-3.5">
+        {(
+          [
+            ["S", "Best in class"],
+            ["A", "Great"],
+            ["B", "Solid backup"],
+          ] as const
+        ).map(([tier, label]) => (
+          <span key={tier} className="inline-flex items-center gap-1.5">
+            <TierBadge tier={tier} size={22} />
+            <span className="text-[12.5px] font-semibold text-text-2">
+              {label}
+            </span>
+          </span>
+        ))}
+      </div>
 
       <div className="flex flex-col gap-[22px]">
         {MUSCLE_ORDER.map((muscle) => {
@@ -69,10 +87,10 @@ export default function LibraryPage() {
                           <Pill>
                             <span className="capitalize">{ex.equipment}</span>
                           </Pill>
-                          <Pill>
-                            {ex.repRange.min}–{ex.repRange.max} reps
-                          </Pill>
-                          <Pill>{ex.targetRIR} RIR</Pill>
+                          {/* Single text node so the pill's flex gap can't
+                              split "8–12 reps" apart. */}
+                          <Pill>{`${ex.repRange.min}–${ex.repRange.max} reps`}</Pill>
+                          <Pill>{`${ex.targetRIR} RIR`}</Pill>
                         </div>
                       </div>
                     </div>
