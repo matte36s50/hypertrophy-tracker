@@ -28,6 +28,18 @@ a {
   touch-action: manipulation;
 }
 
+/* Shared pressed state for tappable controls (buttons, set rows, steppers,
+   RIR segments, timer chips): a quick scale + dim on touch-down. */
+.press {
+  transition:
+    transform 0.08s ease,
+    filter 0.12s ease;
+}
+.press:active:not(:disabled) {
+  transform: scale(0.97);
+  filter: brightness(0.95);
+}
+
 /* Tabular figures for every weight / rep / set / timer value (design spec). */
 .tnum {
   font-variant-numeric: tabular-nums;

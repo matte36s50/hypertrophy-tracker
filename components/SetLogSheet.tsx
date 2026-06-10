@@ -42,25 +42,54 @@ export function SetLogSheet({
   onClose,
 }: SetLogSheetProps) {
   const [weight, setWeight] = useState(initial.weight);
+  // Free-typing buffer for the weight input; committed on blur/Enter/save.
+  const [weightStr, setWeightStr] = useState(formatWeight(initial.weight));
   const [reps, setReps] = useState(initial.reps);
   const [rir, setRir] = useState(initial.rir);
   const round = (n: number) => Math.round(n * 10) / 10;
-  const nudge = (delta: number) =>
-    setWeight((w) => Math.max(0, round(w + delta)));
+  const setW = (n: number) => {
+    setWeight(n);
+    setWeightStr(formatWeight(n));
+  };
+  const nudge = (delta: number) => setW(Math.max(0, round(weight + delta)));
+  // Parse the typed buffer into the weight; revert to the last valid value on
+  // invalid input. Returns the committed weight so save can use it directly.
+  const commitWeight = (): number => {
+    const v = parseFloat(weightStr);
+    if (!Number.isNaN(v) && v >= 0) {
+      const next = round(v);
+      setW(next);
+      return next;
+    }
+    setWeightStr(formatWeight(weight));
+    return weight;
+  };
 
   const bigBtn =
-    "flex h-[52px] w-[52px] items-center justify-center rounded-btn border border-border bg-surface-2 text-2xl font-semibold leading-none text-text active:bg-surface-3";
+    "press flex h-[52px] w-[52px] items-center justify-center rounded-btn border border-border bg-surface-2 text-2xl font-semibold leading-none text-text";
   const weightBtn =
-    "flex h-[50px] flex-1 items-center justify-center rounded-btn border border-border bg-surface-2 text-[15px] font-extrabold tabular-nums leading-none text-text active:bg-surface-3";
+    "press flex h-[50px] flex-1 items-center justify-center rounded-btn border border-border bg-surface-2 text-[15px] font-extrabold tabular-nums leading-none text-text";
 
   return (
     <Sheet title={`${exercise.name} · Set ${setNumber}`} onClose={onClose}>
-      {/* Weight — coarse (±{step}) and fine (±{fineStep}) steppers. */}
+      {/* Weight — tap-to-type value plus coarse/fine steppers. */}
       <div className="border-b border-border py-3">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-[15px] font-bold text-text">Weight</span>
-          <span className="text-[26px] font-extrabold tabular-nums text-text">
-            {formatWeight(weight)}
+          <span className="flex items-baseline">
+            <input
+              type="text"
+              inputMode="decimal"
+              value={weightStr}
+              onChange={(e) => setWeightStr(e.target.value)}
+              onBlur={commitWeight}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+              }}
+              onFocus={(e) => e.currentTarget.select()}
+              aria-label={`Weight in ${unit} — tap to type`}
+              className="w-[84px] rounded-none border-0 border-b-2 border-dashed border-border-strong bg-transparent p-0 pb-0.5 text-center text-[26px] font-extrabold tabular-nums text-text outline-none"
+            />
             <span className="ml-1 text-[14px] font-semibold text-text-3">
               {unit}
             </span>
@@ -139,7 +168,7 @@ export function SetLogSheet({
               key={v}
               type="button"
               onClick={() => setRir(v)}
-              className={`h-[46px] flex-1 rounded-input border text-base font-extrabold tabular-nums ${
+              className={`press h-[46px] flex-1 rounded-input border text-base font-extrabold tabular-nums ${
                 rir === v
                   ? "border-accent bg-accent text-accent-contrast"
                   : "border-border bg-surface-2 text-text-2"
@@ -153,7 +182,9 @@ export function SetLogSheet({
 
       {/* Actions */}
       <div className="mt-[18px] flex flex-col gap-2.5">
-        <SheetButton onClick={() => onSave({ weight, reps, rir })}>
+        {/* Commit any in-progress typed weight so a save without blurring
+            first doesn't lose it. */}
+        <SheetButton onClick={() => onSave({ weight: commitWeight(), reps, rir })}>
           <IconCheck s={18} /> {isEditing ? "Save changes" : "Log set"}
         </SheetButton>
         {isEditing && onDelete && (

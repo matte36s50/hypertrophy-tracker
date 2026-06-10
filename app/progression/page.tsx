@@ -36,6 +36,36 @@ function statusStyle(status: VolumeStatus) {
   return { dot: "bg-warn", text: "text-warn-text", fill: "bg-accent" };
 }
 
+// Mini progress ring for "almost there" nudges — fills as the streak builds
+// (half-filled at 1 of 2 qualifying sessions).
+function MiniRing({ frac, size = 22 }: { frac: number; size?: number }) {
+  const r = (size - 4) / 2;
+  const circ = 2 * Math.PI * r;
+  return (
+    <svg width={size} height={size} className="block -rotate-90">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke="rgba(0,0,0,0.12)"
+        strokeWidth={3.5}
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        className="stroke-accent"
+        strokeWidth={3.5}
+        strokeLinecap="round"
+        strokeDasharray={circ}
+        strokeDashoffset={circ * (1 - frac)}
+      />
+    </svg>
+  );
+}
+
 export default function ProgressionPage() {
   const { data } = useAppData();
 
@@ -112,19 +142,27 @@ export default function ProgressionPage() {
                     className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-input ${
                       ready
                         ? "bg-accent text-accent-contrast"
-                        : "bg-surface-3 text-text-2"
+                        : "border border-border bg-surface-2"
                     }`}
                   >
-                    {ready ? <IconArrowUp s={20} /> : <IconFlame s={18} />}
+                    {ready ? (
+                      <IconArrowUp s={20} />
+                    ) : (
+                      <MiniRing frac={Math.min(1, n.streak / 2)} />
+                    )}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2.5">
                       <h3 className="text-base font-extrabold text-text">
                         {ex.name}
                       </h3>
-                      {ready && n.suggestedWeight != null && (
+                      {ready && n.suggestedWeight != null ? (
                         <span className="shrink-0 rounded-full bg-accent px-2.5 py-[3px] text-[13.5px] font-extrabold tabular-nums text-accent-contrast">
                           → {formatWeight(n.suggestedWeight)} {data.unit}
+                        </span>
+                      ) : (
+                        <span className="shrink-0 rounded-full border border-border bg-surface-2 px-[9px] py-[3px] text-xs font-extrabold tabular-nums text-text-2">
+                          {n.streak} of 2
                         </span>
                       )}
                     </div>

@@ -188,7 +188,7 @@ export function Stepper({
   suffix?: string;
 }) {
   const btn =
-    "flex h-[38px] w-[38px] items-center justify-center rounded-chip border border-border bg-surface-2 text-xl font-semibold leading-none text-text active:bg-surface-3 disabled:opacity-40";
+    "press flex h-[38px] w-[38px] items-center justify-center rounded-chip border border-border bg-surface-2 text-xl font-semibold leading-none text-text disabled:opacity-40";
   return (
     <div className="flex items-center gap-2.5">
       <button

@@ -63,7 +63,7 @@ export function SheetButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex h-[50px] w-full items-center justify-center gap-2 rounded-btn border text-base font-bold transition-transform active:scale-[0.99] ${variants[variant]}`}
+      className={`press flex h-[50px] w-full items-center justify-center gap-2 rounded-btn border text-base font-bold ${variants[variant]}`}
     >
       {children}
     </button>
