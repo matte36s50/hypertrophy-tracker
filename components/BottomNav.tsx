@@ -7,6 +7,7 @@ import {
   IconProgress,
   IconHistory,
   IconLibrary,
+  IconSki,
 } from "@/components/icons";
 
 // Phone-style bottom tab bar. Active tab = accent icon + label. Fixed to the
@@ -14,6 +15,7 @@ import {
 const TABS = [
   { href: "/", label: "Today", icon: IconToday },
   { href: "/progression", label: "Progress", icon: IconProgress },
+  { href: "/ski", label: "Ski", icon: IconSki },
   { href: "/history", label: "History", icon: IconHistory },
   { href: "/library", label: "Library", icon: IconLibrary },
 ];

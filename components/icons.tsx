@@ -49,6 +49,9 @@ export const IconProgress = ({ s }: IconProps) => (
 export const IconHistory = ({ s }: IconProps) => (
   <Ic s={s} d="M4 20V11M10 20V4M16 20v-6M22 20H2" />
 );
+export const IconSki = ({ s }: IconProps) => (
+  <Ic s={s} d="M2 20l7.5-12 4 6 2.5-3.5L22 20zM8 11.2l1.5 1.3 1.6-1.4" />
+);
 export const IconLibrary = ({ s }: IconProps) => (
   <Ic s={s} d="M6 4v16M6 6l4-1v15l-4 1M18 4v16M18 6l-4-1v15l4 1" />
 );

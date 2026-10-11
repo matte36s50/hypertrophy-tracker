@@ -1,3 +1,5 @@
+import type { SkiProgram } from "./ski/types";
+
 // Core domain types for the app. These describe the "shape" of our data and
 // are shared everywhere so the editor can catch mistakes for us.
 
@@ -102,4 +104,7 @@ export interface AppData {
   logs: SetLog[];
   // Finished workout sessions, stamped when the user closes out a workout.
   sessions: WorkoutSession[];
+  // The Pre-Ski Season program, or null when it hasn't been started.
+  ski: SkiProgram | null;
 }
+

@@ -26,6 +26,13 @@ Nippard-style exercise tiers.
   "In plan" marker in the library.
 - **Polish:** auto-starting rest timer (with ±30s / skip), and a plan editor
   (`/plan`) to rename days, reorder, add/remove exercises and adjust set counts.
+- **Pre-Ski Season (6 weeks):** a separate program in the **Ski** tab (Carv
+  pre-season plan by Katie White). Schedule option A/B on a dated 6-week
+  calendar with movable sessions, knee-friendly mode (low-impact substitutes,
+  0–10 knee-pain tracking and flagging rules), interval timers, per-set logging
+  and a progress view. Its logs are kept apart from the hypertrophy split, so
+  they don't affect RP volume or progression. Exercise image sources:
+  `docs/ski-exercise-images.md`.
 - **Phase 5 (optional):** cloud sync + login.
 
 ## Run locally
@@ -46,8 +53,11 @@ lib/                 training logic & data
   split.ts           the Mon/Wed/Fri Push-Pull-Legs split
   muscles.ts         muscle labels + RP volume landmarks (MEV/MAV/MRV)
   volume.ts          weekly set-count + status helpers
+  ski/               Pre-Ski program: exercises, sessions, schedule, knee rules,
+                     on-device custom images (IndexedDB)
   storage/           StorageAdapter interface + localStorage implementation
-public/              manifest, service worker (sw.js), app icons
+public/              manifest, service worker (sw.js), app icons,
+                     exercise-images/ (bundled from free-exercise-db, Unlicense)
 scripts/             icon generator
 ```
 

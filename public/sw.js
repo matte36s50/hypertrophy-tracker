@@ -5,7 +5,7 @@
 //  - Static assets (JS/CSS/images/fonts): cache-first for speed.
 // Bump CACHE_VERSION whenever you want to force clients to refetch everything.
 
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const CACHE_NAME = `hypertrophy-${CACHE_VERSION}`;
 
 // App shell URLs to pre-cache on install so the app opens offline.
@@ -15,6 +15,9 @@ const PRECACHE_URLS = [
   "/history",
   "/library",
   "/plan",
+  "/ski",
+  "/ski/progress",
+  "/ski/images",
   "/manifest.webmanifest",
 ];
 
