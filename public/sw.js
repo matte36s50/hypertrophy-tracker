@@ -1,11 +1,14 @@
 // Simple, dependency-free service worker for offline support.
 // Strategy:
-//  - Navigations (HTML pages): network-first, fall back to cache, then to a
-//    cached shell. This keeps content fresh online but works offline.
-//  - Static assets (JS/CSS/images/fonts): cache-first for speed.
+//  - Immutable static files (/_next/static, icons, exercise images, fonts):
+//    cache-first for speed. Their URLs change whenever their content does.
+//  - Everything else — HTML navigations AND Next's page-data (RSC) requests
+//    used for in-app navigation: network-first, falling back to the cache
+//    offline. Serving those cache-first pinned old page data that referenced
+//    code from a previous deploy, which broke tab switches after an update.
 // Bump CACHE_VERSION whenever you want to force clients to refetch everything.
 
-const CACHE_VERSION = "v3";
+const CACHE_VERSION = "v4";
 const CACHE_NAME = `hypertrophy-${CACHE_VERSION}`;
 
 // App shell URLs to pre-cache on install so the app opens offline.
@@ -53,30 +56,42 @@ self.addEventListener("fetch", (event) => {
   // Don't try to cache cross-origin requests.
   if (url.origin !== self.location.origin) return;
 
-  // HTML navigations: network-first.
-  if (request.mode === "navigate") {
+  const immutable =
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/icons/") ||
+    url.pathname.startsWith("/exercise-images/");
+
+  if (!immutable) {
+    // Network-first; keep a copy for offline use.
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
           return response;
         })
         .catch(() =>
           caches
             .match(request)
-            .then((cached) => cached || caches.match("/")),
+            .then(
+              (cached) =>
+                cached ||
+                (request.mode === "navigate"
+                  ? caches.match("/").then((shell) => shell || Response.error())
+                  : Response.error()),
+            ),
         ),
     );
     return;
   }
 
-  // Other same-origin GETs (assets): cache-first.
+  // Immutable assets: cache-first.
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
-        // Only cache successful, basic responses.
         if (response.ok && response.type === "basic") {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));

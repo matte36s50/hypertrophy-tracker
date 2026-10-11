@@ -12,13 +12,20 @@ const MAX_EDGE = 800;
 
 export type CustomImages = Record<string, string[]>;
 
+// One shared connection, opened on first use (retried if opening fails).
+let dbPromise: Promise<IDBDatabase> | null = null;
+
 function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
+  dbPromise ??= new Promise<IDBDatabase>((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, 1);
     req.onupgradeneeded = () => req.result.createObjectStore(STORE);
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
+  }).catch((err) => {
+    dbPromise = null;
+    throw err;
   });
+  return dbPromise;
 }
 
 async function tx<T>(

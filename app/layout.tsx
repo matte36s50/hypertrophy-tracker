@@ -2,10 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { DataProvider } from "@/components/DataProvider";
-import { BottomNav } from "@/components/BottomNav";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { RestTimerProvider } from "@/components/RestTimerProvider";
-import { RestTimerBar } from "@/components/RestTimerBar";
+import { AppShell } from "@/components/AppShell";
 
 // Ship font: Hanken Grotesk (weights 400–800), exposed as --font-sans.
 const hanken = Hanken_Grotesk({
@@ -47,16 +46,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={hanken.variable}>
-      <body className="min-h-dvh bg-bg font-sans text-text antialiased">
+      <body className="overflow-hidden bg-bg font-sans text-text antialiased">
         <DataProvider>
           <RestTimerProvider>
-            {/* Main scroll area. Top padding clears the status bar; bottom
-                padding leaves room for the rest-timer bar + nav. */}
-            <main className="mx-auto w-full max-w-md px-4 pb-32 pt-6">
-              {children}
-            </main>
-            <RestTimerBar />
-            <BottomNav />
+            <AppShell>{children}</AppShell>
           </RestTimerProvider>
         </DataProvider>
         <ServiceWorkerRegistrar />

@@ -70,11 +70,16 @@ export default function PlanPage() {
           Day name
         </label>
         <input
+          key={day.key}
           type="text"
-          value={day.label}
-          onChange={(e) =>
-            update((dd) => setDayLabel(dd, day.key, e.target.value))
-          }
+          defaultValue={day.label}
+          // Saved on blur, not per keystroke: saving trims the name, which
+          // used to swallow every space as you typed ("Upper A" → "UpperA").
+          onBlur={(e) => {
+            update((dd) => setDayLabel(dd, day.key, e.target.value));
+            e.target.value = e.target.value.trim() || day.label;
+          }}
+          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
           className="box-border h-[46px] w-full rounded-input border border-border bg-surface-2 px-3.5 text-[15.5px] font-bold text-text outline-none focus:border-accent"
         />
       </Card>

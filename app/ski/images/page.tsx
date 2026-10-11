@@ -104,7 +104,7 @@ export default function SkiImagesPage() {
                     {has
                       ? "Your image"
                       : e.imageSource
-                        ? `free-exercise-db (${e.imageSource.match})`
+                        ? `${e.imageSource.dataset} (${e.imageSource.match})`
                         : "Placeholder"}{" "}
                     · {e.equipment.map((q) => EQUIPMENT_LABELS[q]).join(", ")}
                   </span>

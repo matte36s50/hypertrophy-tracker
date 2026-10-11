@@ -17,8 +17,16 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Respect the iPhone notch / home indicator. */
+/* The body is a fixed, viewport-sized frame (see AppShell): only the content
+   area scrolls. dvh tracks iOS Safari's collapsing toolbar; vh is the
+   fallback for older browsers. Respect the iPhone notch at the top. */
+html,
 body {
+  height: 100%;
+}
+body {
+  height: 100vh;
+  height: 100dvh;
   padding-top: env(safe-area-inset-top);
 }
 
