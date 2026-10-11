@@ -61,13 +61,20 @@ export type SkiVariant = "easier" | "harder";
 
 // Where an exercise's demo image came from (for the attribution report).
 export interface ImageSource {
-  dataset: "free-exercise-db";
-  // free-exercise-db exercise id (also the folder under /public/exercise-images).
+  dataset: "free-exercise-db" | "wger";
+  // The dataset's exercise id.
   id: string;
+  // The dataset's exercise name.
   name: string;
   // "exact" = same movement; "similar" = same pattern with a different
   // implement or a missing detail (e.g. two-hand swing vs one-arm).
   match: "exact" | "similar";
+  // Credit for images whose license requires attribution (wger, CC BY-SA).
+  credit?: {
+    author: string;
+    license: { name: string; url: string };
+    sourceUrl: string;
+  };
 }
 
 export interface SkiExercise {

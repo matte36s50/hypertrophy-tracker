@@ -16,6 +16,8 @@ export function ExerciseDemo({
 }) {
   const custom = useCustomImages()[exercise.id];
   const srcs = custom?.length ? custom : exercise.imageUrls;
+  const source = custom?.length ? undefined : exercise.imageSource;
+  const credit = source?.credit;
   const [frame, setFrame] = useState(0);
   const src = srcs[Math.min(frame, srcs.length - 1)];
 
@@ -32,7 +34,7 @@ export function ExerciseDemo({
           <img
             src={src}
             alt={`${exercise.name} — ${frame === 0 ? "start" : "end"} position`}
-            className={`w-full object-cover ${compact ? "aspect-[16/7]" : "aspect-video"}`}
+            className={`w-full bg-white object-contain ${compact ? "aspect-[16/7]" : "aspect-video"}`}
             loading="lazy"
           />
           {srcs.length > 1 && (
@@ -59,8 +61,8 @@ export function ExerciseDemo({
         <span className="min-w-0 truncate text-[11.5px] font-semibold text-text-3">
           {custom?.length
             ? "Your image"
-            : exercise.imageSource
-              ? `${exercise.imageSource.match === "similar" ? "Similar: " : ""}${exercise.imageSource.name} · free-exercise-db`
+            : source
+              ? `${source.match === "similar" ? "Similar: " : ""}${source.name} · ${source.dataset}`
               : "Placeholder"}
         </span>
         <a
@@ -72,6 +74,18 @@ export function ExerciseDemo({
           Watch form ↗
         </a>
       </div>
+      {credit && (
+        <p className="border-t border-border px-3.5 py-1.5 text-[11px] font-medium leading-snug text-text-3">
+          Image:{" "}
+          <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">
+            {source!.name}
+          </a>{" "}
+          by {credit.author} on wger, resized ·{" "}
+          <a href={credit.license.url} target="_blank" rel="noopener noreferrer" className="underline">
+            {credit.license.name}
+          </a>
+        </p>
+      )}
     </div>
   );
 }

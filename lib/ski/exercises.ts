@@ -3,11 +3,14 @@ import type { ImageSource, SkiEquipment, SkiExercise } from "./types";
 // Exercise catalogue for the Pre-Ski Season program (Carv pre-season plan by
 // Katie White). Cues are short paraphrases for the app, not copied text.
 //
-// Demo images come from free-exercise-db (github.com/yuhonas/free-exercise-db,
-// released under the Unlicense / public domain) and are bundled under
-// /public/exercise-images/<dataset id>/{0,1}.jpg — never hot-linked. Exercises
-// the dataset doesn't cover have no images and show a placeholder card with the
-// cue text plus a YouTube form search. See docs/ski-exercise-images.md.
+// Demo images are bundled under /public/exercise-images — never hot-linked:
+//  - free-exercise-db (github.com/yuhonas/free-exercise-db, Unlicense / public
+//    domain): <dataset id>/{0,1}.jpg, start and end position.
+//  - wger (wger.de), for gaps it covers better: wger-<id>/0.jpg, resized and
+//    flattened to JPEG. These are CC BY-SA 4.0, so each one carries a credit
+//    (author, license, source) that the app shows under the image.
+// Exercises neither covers show a placeholder card with the cue text plus a
+// YouTube form search. See docs/ski-exercise-images.md.
 
 export function youtubeSearch(name: string): string {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(
@@ -15,23 +18,42 @@ export function youtubeSearch(name: string): string {
   )}`;
 }
 
+const CC_BY_SA_4 = {
+  name: "CC BY-SA 4.0",
+  url: "https://creativecommons.org/licenses/by-sa/4.0/",
+};
+
 // Helper: build an exercise, deriving image URLs + video link.
+//  img:  free-exercise-db [id, name, match]
+//  wger: wger [exercise id, name, author ("" if none given), match]
 function ex(
   e: Omit<SkiExercise, "imageUrls" | "videoUrl" | "imageSource"> & {
     img?: [id: string, name: string, match: ImageSource["match"]];
+    wger?: [id: number, name: string, author: string, match: ImageSource["match"]];
   },
 ): SkiExercise {
-  const { img, ...rest } = e;
-  return {
-    ...rest,
-    imageUrls: img
-      ? [`/exercise-images/${img[0]}/0.jpg`, `/exercise-images/${img[0]}/1.jpg`]
-      : [],
-    videoUrl: youtubeSearch(e.name),
-    imageSource: img
-      ? { dataset: "free-exercise-db", id: img[0], name: img[1], match: img[2] }
-      : undefined,
-  };
+  const { img, wger, ...rest } = e;
+  let imageUrls: string[] = [];
+  let imageSource: ImageSource | undefined;
+  if (wger) {
+    const [id, name, author, match] = wger;
+    imageUrls = [`/exercise-images/wger-${id}/0.jpg`];
+    imageSource = {
+      dataset: "wger",
+      id: String(id),
+      name,
+      match,
+      credit: {
+        author: author || "wger contributors",
+        license: CC_BY_SA_4,
+        sourceUrl: `https://wger.de/en/exercise/${id}/view/`,
+      },
+    };
+  } else if (img) {
+    imageUrls = [`/exercise-images/${img[0]}/0.jpg`, `/exercise-images/${img[0]}/1.jpg`];
+    imageSource = { dataset: "free-exercise-db", id: img[0], name: img[1], match: img[2] };
+  }
+  return { ...rest, imageUrls, videoUrl: youtubeSearch(e.name), imageSource };
 }
 
 const BW: SkiEquipment[] = ["bodyweight"];
@@ -67,6 +89,7 @@ export const SKI_EXERCISES: SkiExercise[] = [
     load: "bodyweight",
     tracking: "reps",
     perSide: true,
+    wger: [1572, "Bird Dog", "Settebello", "exact"],
   }),
   ex({
     id: "tspine-rotation",
@@ -97,6 +120,7 @@ export const SKI_EXERCISES: SkiExercise[] = [
     tracking: "reps",
     perSide: true,
     kneeLoading: true,
+    wger: [1804, "ankle dorsiflexion rocks", "Davidgj32", "exact"],
   }),
   ex({
     id: "worlds-greatest-stretch",
@@ -150,6 +174,7 @@ export const SKI_EXERCISES: SkiExercise[] = [
     perSide: true,
     easier: "From the knees",
     harder: "Feet closer together",
+    wger: [1091, "Plank Shoulder Taps", "clafal", "exact"],
   }),
   ex({
     id: "pogo-jumps",
@@ -217,6 +242,7 @@ export const SKI_EXERCISES: SkiExercise[] = [
     tracking: "load",
     perSide: true,
     kneeLoading: true,
+    wger: [1604, "Sliding Lateral Lunge", "RiccaBaro", "exact"],
   }),
   ex({
     id: "kb-single-arm-row",
@@ -519,7 +545,7 @@ export const SKI_EXERCISES: SkiExercise[] = [
     equipment: ["kettlebell"],
     load: "challenging",
     tracking: "load",
-    img: ["One-Arm_Kettlebell_Swings", "One-Arm Kettlebell Swings", "similar"],
+    wger: [960, "Kettlebell Swing", "", "exact"],
   }),
   ex({
     id: "conditioning-intervals",
@@ -601,7 +627,7 @@ export const SKI_EXERCISES: SkiExercise[] = [
     load: "band",
     tracking: "reps",
     perSide: true,
-    img: ["Monster_Walk", "Monster Walk", "similar"],
+    wger: [2618, "Hip-Out and Hip-In Lateral Steps", "", "exact"],
   }),
   ex({
     id: "ko-bike-intervals",
