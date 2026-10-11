@@ -28,6 +28,10 @@ function migrate(data: AppData): AppData {
   if (!Array.isArray(data.sessions)) {
     data = { ...data, sessions: [] };
   }
+  // v3 -> v4: added the optional Pre-Ski Season program. Not started yet.
+  if (data.ski === undefined) {
+    data = { ...data, ski: null };
+  }
   return { ...data, version: CURRENT_VERSION };
 }
 

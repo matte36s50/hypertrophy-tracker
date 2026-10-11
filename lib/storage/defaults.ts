@@ -11,5 +11,6 @@ export function makeDefaultData(): AppData {
     split: JSON.parse(JSON.stringify(DEFAULT_SPLIT)),
     logs: [],
     sessions: [],
+    ski: null,
   };
 }

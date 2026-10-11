@@ -34,6 +34,14 @@ import {
 } from "@/lib/logs";
 import { analyzeExercise } from "@/lib/progression";
 import type { MuscleGroup, SetLog } from "@/lib/types";
+import {
+  PROGRAM_DAYS,
+  dayIndexFor,
+  pendingMorningCheck,
+  sessionOn,
+  toDateKey,
+} from "@/lib/ski/program";
+import { DAY_KIND_LABELS } from "@/lib/ski/sessions";
 
 // Describes which set the logging sheet is currently editing/adding.
 interface SheetTarget {
@@ -227,6 +235,8 @@ export default function TodayPage() {
           <IconEdit s={15} /> Plan
         </button>
       </div>
+
+      {data.ski && <SkiTodayCard />}
 
       {/* Session progress card */}
       <Card className="mb-3.5">
@@ -499,5 +509,38 @@ export default function TodayPage() {
         />
       )}
     </div>
+  );
+}
+
+// Pre-ski program nudge: today's ski session and any pending morning knee check.
+function SkiTodayCard() {
+  const { data } = useAppData();
+  const router = useRouter();
+  const program = data.ski!;
+  const today = toDateKey(new Date());
+  const i = dayIndexFor(program, today);
+  if (i < 0 || i >= PROGRAM_DAYS) return null;
+  const kind = program.schedule[i];
+  const done = Boolean(sessionOn(program, today));
+  const morning = pendingMorningCheck(program, today);
+  if (kind === "rest" && !morning) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => router.push(morning || kind === "rest" ? "/ski" : `/ski/day/${i}`)}
+      className="press mb-3.5 flex w-full items-center gap-3 rounded-card border border-border bg-surface px-4 py-3 text-left shadow-card"
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block text-[12px] font-bold uppercase tracking-[0.05em] text-accent-text">
+          Pre-ski · week {Math.floor(i / 7) + 1}
+        </span>
+        <span className="block text-[15px] font-extrabold text-text">
+          {morning
+            ? "Rate your knee this morning"
+            : `${DAY_KIND_LABELS[kind]}${done ? " · done ✓" : ""}`}
+        </span>
+      </span>
+      <IconChevron s={15} />
+    </button>
   );
 }
