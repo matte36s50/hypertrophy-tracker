@@ -87,6 +87,16 @@ export default function TodayPage() {
     }));
   }, [data, day]);
 
+  // Everything below depends on today's date and the saved plan, neither of
+  // which exists when the page is pre-rendered at build time. Rendering it
+  // before the client has loaded makes React's hydration fail (error #418) on
+  // any day other than the build day, so wait until data is loaded.
+  if (!ready) {
+    return (
+      <p className="mt-6 text-center text-xs text-text-3">Loading your data…</p>
+    );
+  }
+
   const totalPlanned = day.exercises.reduce((s, e) => s + e.sets, 0);
   const totalLogged = day.exercises.reduce(
     (s, e) => s + todaysLogsForExercise(data, e.exerciseId).length,
@@ -462,10 +472,6 @@ export default function TodayPage() {
             "End workout early"
           )}
         </button>
-      )}
-
-      {!ready && (
-        <p className="mt-6 text-center text-xs text-text-3">Loading your data…</p>
       )}
 
       {sheet && sheetExercise && (

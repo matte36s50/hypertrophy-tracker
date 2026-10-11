@@ -44,10 +44,14 @@ export function ExerciseDemo({
       ) : (
         <div className="flex flex-col gap-1.5 px-3.5 py-3">
           <span className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-text-3">
-            No demo image yet
+            No photo in the free exercise library
           </span>
           <p className="text-[13.5px] font-medium leading-snug text-text-2">
             {exercise.cue}
+          </p>
+          <p className="text-[12px] font-medium text-text-3">
+            Tap “Watch form” for a video, or add your own photo under Ski →
+            Exercise images.
           </p>
         </div>
       )}

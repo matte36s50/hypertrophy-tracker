@@ -3,8 +3,8 @@
 import { useRestTimer } from "@/components/RestTimerProvider";
 import { IconFlame, IconCheck } from "@/components/icons";
 
-// Floating rest-timer bar. Sits just above the bottom nav and only shows while
-// a rest is running or has just finished. Accent-tinted to match the design.
+// Rest-timer bar. Overlays the bottom of the content area, just above the nav,
+// and only shows while a rest is running or has just finished.
 export function RestTimerBar() {
   const { remaining, total, active, finished, addSeconds, skip } =
     useRestTimer();
@@ -20,10 +20,7 @@ export function RestTimerBar() {
     "press h-9 rounded-chip border border-border bg-surface-3 px-2.5 text-[13px] font-extrabold tabular-nums text-text";
 
   return (
-    <div
-      className="fixed inset-x-0 z-40 px-4"
-      style={{ bottom: "calc(env(safe-area-inset-bottom) + 4.75rem)" }}
-    >
+    <div className="absolute inset-x-0 bottom-3 z-40 px-4">
       <div className="mx-auto w-full max-w-md">
         {finished ? (
           <button

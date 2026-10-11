@@ -292,15 +292,17 @@ export const PAIN_DURING_LIMIT = 3;
 // All ratings must be at or below this for two weeks to offer knee mode OFF.
 export const PAIN_CLEAR_LIMIT = 2;
 
-// A finished session that still needs its next-morning rating, once that
-// morning has arrived.
+// Yesterday's session, if it still needs its next-morning rating. Only the
+// morning right after counts — a rating taken days later isn't a next-morning
+// reading, so older unrated sessions are left alone rather than nagged about.
 export function pendingMorningCheck(
   program: SkiProgram,
   today: string,
 ): SkiSessionRecord | undefined {
-  return [...program.sessions]
-    .filter((s) => s.painMorning === undefined && s.date < today)
-    .sort((a, b) => b.date.localeCompare(a.date))[0];
+  const yesterday = addDays(today, -1);
+  return program.sessions.find(
+    (s) => s.date === yesterday && s.painMorning === undefined,
+  );
 }
 
 // The morning is "worse than the day before" when it's higher than the

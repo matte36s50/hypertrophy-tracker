@@ -10,8 +10,9 @@ import {
   IconSki,
 } from "@/components/icons";
 
-// Phone-style bottom tab bar. Active tab = accent icon + label. Fixed to the
-// bottom, frosted, and respects the iPhone home indicator via safe-area padding.
+// Phone-style bottom tab bar. Active tab = accent icon + label. Sits in normal
+// flow at the bottom of the AppShell (not position: fixed, which drifts on iOS
+// while scrolling) and respects the home indicator via safe-area padding.
 const TABS = [
   { href: "/", label: "Today", icon: IconToday },
   { href: "/progression", label: "Progress", icon: IconProgress },
@@ -25,7 +26,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/90 backdrop-blur-xl"
+      className="z-40 shrink-0 border-t border-border bg-surface"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="mx-auto flex w-full max-w-md items-stretch justify-around">

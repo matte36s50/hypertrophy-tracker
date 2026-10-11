@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import type { AppData } from "@/lib/types";
@@ -24,15 +25,17 @@ const DataContext = createContext<DataContextValue | null>(null);
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<AppData>(() => makeDefaultData());
   const [ready, setReady] = useState(false);
+  const loaded = useRef(false);
 
   // Load saved data once, on the client.
   useEffect(() => {
     let active = true;
     getStorage()
       .load()
-      .then((loaded) => {
+      .then((saved) => {
         if (active) {
-          setData(loaded);
+          loaded.current = true;
+          setData(saved);
           setReady(true);
         }
       });
@@ -43,13 +46,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const update = useCallback(
     (next: AppData | ((prev: AppData) => AppData)) => {
+      // Ignore edits until saved data has loaded: applying them to the
+      // placeholder defaults and saving would overwrite the real data.
+      if (!loaded.current) return;
       setData((prev) => {
         const value =
           typeof next === "function"
             ? (next as (p: AppData) => AppData)(prev)
             : next;
-        // Persist in the background.
-        void getStorage().save(value);
+        // Persist in the background. A failed write (storage full, private
+        // mode) must not crash the app, but shouldn't be silent either.
+        getStorage()
+          .save(value)
+          .catch((err) => console.warn("Couldn't save your data:", err));
         return value;
       });
     },
